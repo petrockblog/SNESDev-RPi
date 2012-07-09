@@ -28,37 +28,52 @@
 
 #include "SNESpad.h"
 
+/* define to enable debug outputs */
+//#define DEBUG 
+
 /* set the GPIO pins as input or output pins */
-void initializePad(snespad *pad) {
+void initializePads( snespad *pad ) {
   printf("Initializing pad.\n");
   bcm2835_gpio_fsel( pad->strobe, BCM2835_GPIO_FSEL_OUTP );
   bcm2835_gpio_fsel( pad->clock,  BCM2835_GPIO_FSEL_OUTP );
-  bcm2835_gpio_fsel( pad->data,   BCM2835_GPIO_FSEL_INPT );
+  bcm2835_gpio_fsel( pad->data1,   BCM2835_GPIO_FSEL_INPT );
+  bcm2835_gpio_fsel( pad->data2,   BCM2835_GPIO_FSEL_INPT );
 
   bcm2835_gpio_write( pad->strobe, LOW );
   bcm2835_gpio_write( pad->clock, LOW );
 }
 
-/* check the state of each button */
-void updateButtons(snespad *pad, uint16_t* buttons) {
+/* check the state of each button and each controller */
+void updateButtons( snespad *pad, buttonstates* buttons ) {
+
+  int i;
+
   bcm2835_gpio_write( pad->strobe, HIGH );
   delayMicroseconds(2);
   bcm2835_gpio_write( pad->strobe, LOW );
   delayMicroseconds(2);
 
-  *buttons = 0;
-  int i;
+  buttons->buttons1 = 0;
+  buttons->buttons2 = 0;
   for (i = 0; i < 16; i++) {
 
-    uint8_t curpin = bcm2835_gpio_lev(pad->data);
+    uint8_t curpin1 = bcm2835_gpio_lev(pad->data1);
+    uint8_t curpin2 = bcm2835_gpio_lev(pad->data2);
+    #ifdef DEBUG
+      printf("1: %d    2: %d\n",curpin1,curpin2);
+    #endif
     bcm2835_gpio_write( pad->clock, HIGH );
     delayMicroseconds(2);
     bcm2835_gpio_write( pad->clock, LOW );
     delayMicroseconds(2);
 
-    if( curpin==LOW ) {
-      *buttons |= (1<<i);
+    if( curpin1==LOW ) {
+      buttons->buttons1 |= (1<<i);
+    } 
+    if( curpin2==LOW ) {
+      buttons->buttons2 |= (1<<i);
     } 
     
   }
+
 }

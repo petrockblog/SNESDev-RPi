@@ -130,7 +130,7 @@ void processBtn(uint16_t buttons, uint16_t mask, uint16_t key, int uinh) {
 
 int main(int argc, char *argv[]) {
 
-    uint16_t buttons1, buttons2;
+    buttonstates buttons;
 
     if (!bcm2835_init())
         return 1;
@@ -141,19 +141,15 @@ int main(int argc, char *argv[]) {
     bcm2835_gpio_fsel(BUTTONHIGH, BCM2835_GPIO_FSEL_OUTP);
 
     /* initialize controller structures with GPIO pin assignments */
-	snespad pad1;
-	pad1.clock  = RPI_GPIO_P1_18;
-	pad1.strobe = RPI_GPIO_P1_16;
-	pad1.data   = RPI_GPIO_P1_22;
+	snespad pads;
+	pads.clock  = RPI_GPIO_P1_18;
+	pads.strobe = RPI_GPIO_P1_16;
+	pads.data1  = RPI_GPIO_P1_22;
+	pads.data2  = RPI_GPIO_P1_15;
 
-	snespad pad2;
-	pad2.clock  = RPI_GPIO_P1_18;
-	pad2.strobe = RPI_GPIO_P1_16;
-	pad2.data   = RPI_GPIO_P1_15;
 
 	/* set GPIO pins as input or output pins */
-	initializePad(&pad1);
-	initializePad(&pad2);
+	initializePads( &pads );
 
 	/* intialize virtual input device */
 	int uinp_fd;
@@ -169,37 +165,36 @@ int main(int argc, char *argv[]) {
 		// setButtonLEDs();
 
 		/* read states of the buttons */
-		updateButtons(&pad1, &buttons1);
-		updateButtons(&pad2, &buttons2);
+		updateButtons(&pads, &buttons);
 
 		/* send an event (pressed or released) for each button */
 		/* key events for first controller */
-        processBtn(buttons1,SNES_A,KEY_X,uinp_fd);
-        processBtn(buttons1,SNES_B,KEY_Z,uinp_fd);
-        processBtn(buttons1,SNES_X,KEY_S,uinp_fd);
-        processBtn(buttons1,SNES_Y,KEY_A,uinp_fd);
-        processBtn(buttons1,SNES_L,KEY_Q,uinp_fd);
-        processBtn(buttons1,SNES_R,KEY_W,uinp_fd);
-        processBtn(buttons1,SNES_SELECT,KEY_RIGHTSHIFT,uinp_fd);
-        processBtn(buttons1,SNES_START,KEY_ENTER,uinp_fd);
-        processBtn(buttons1,SNES_LEFT,KEY_LEFT,uinp_fd);
-        processBtn(buttons1,SNES_RIGHT,KEY_RIGHT,uinp_fd);
-        processBtn(buttons1,SNES_UP,KEY_UP,uinp_fd);
-        processBtn(buttons1,SNES_DOWN,KEY_DOWN,uinp_fd);
+        processBtn(buttons.buttons1, SNES_A,     KEY_X,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_B,     KEY_Z,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_X,     KEY_S,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_Y,     KEY_A,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_L,     KEY_Q,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_R,     KEY_W,          uinp_fd);
+        processBtn(buttons.buttons1, SNES_SELECT,KEY_RIGHTSHIFT, uinp_fd);
+        processBtn(buttons.buttons1, SNES_START, KEY_ENTER,      uinp_fd);
+        processBtn(buttons.buttons1, SNES_LEFT,  KEY_LEFT,       uinp_fd);
+        processBtn(buttons.buttons1, SNES_RIGHT, KEY_RIGHT,      uinp_fd);
+        processBtn(buttons.buttons1, SNES_UP,    KEY_UP,         uinp_fd);
+        processBtn(buttons.buttons1, SNES_DOWN,  KEY_DOWN,       uinp_fd);
 
-		/* key events for second controller */
-        processBtn(buttons2,SNES_A,KEY_E,uinp_fd);
-        processBtn(buttons2,SNES_B,KEY_R,uinp_fd);
-        processBtn(buttons2,SNES_X,KEY_T,uinp_fd);
-        processBtn(buttons2,SNES_Y,KEY_Y,uinp_fd);
-        processBtn(buttons2,SNES_L,KEY_U,uinp_fd);
-        processBtn(buttons2,SNES_R,KEY_I,uinp_fd);
-        processBtn(buttons2,SNES_SELECT,KEY_O,uinp_fd);
-        processBtn(buttons2,SNES_START,KEY_P,uinp_fd);
-        processBtn(buttons2,SNES_LEFT,KEY_C,uinp_fd);
-        processBtn(buttons2,SNES_RIGHT,KEY_B,uinp_fd);
-        processBtn(buttons2,SNES_UP,KEY_F,uinp_fd);
-        processBtn(buttons2,SNES_DOWN,KEY_V,uinp_fd);
+		// key events for second controller 
+        processBtn(buttons.buttons2, SNES_A,     KEY_E, uinp_fd);
+        processBtn(buttons.buttons2, SNES_B,     KEY_R, uinp_fd);
+        processBtn(buttons.buttons2, SNES_X,     KEY_T, uinp_fd);
+        processBtn(buttons.buttons2, SNES_Y,     KEY_Y, uinp_fd);
+        processBtn(buttons.buttons2, SNES_L,     KEY_U, uinp_fd);
+        processBtn(buttons.buttons2, SNES_R,     KEY_I, uinp_fd);
+        processBtn(buttons.buttons2, SNES_SELECT,KEY_O, uinp_fd);
+        processBtn(buttons.buttons2, SNES_START, KEY_P, uinp_fd);
+        processBtn(buttons.buttons2, SNES_LEFT,  KEY_C, uinp_fd);
+        processBtn(buttons.buttons2, SNES_RIGHT, KEY_B, uinp_fd);
+        processBtn(buttons.buttons2, SNES_UP,    KEY_F, uinp_fd);
+        processBtn(buttons.buttons2, SNES_DOWN,  KEY_V, uinp_fd);
 
 		/* wait for some time to keep the CPU load low */
 		delay(FRAMEWAIT);

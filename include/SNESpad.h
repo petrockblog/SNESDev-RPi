@@ -35,11 +35,18 @@
 #include <stdio.h>
 
 /* holds the GPIO pins for the clock, strobe and data signals */
-typedef struct{
+typedef struct {
     RPiGPIOPin clock;
     RPiGPIOPin strobe;
-    RPiGPIOPin data;
+    RPiGPIOPin data1;
+    RPiGPIOPin data2;
 } snespad;
+
+/* holds the button staes for the first and second controller */
+typedef struct {
+	uint16_t buttons1;
+	uint16_t buttons2;
+} buttonstates;
 
 /* bit masks for checking the button states */
 #define SNES_B       0x01
@@ -55,11 +62,11 @@ typedef struct{
 #define SNES_L       0x400
 #define SNES_R       0x800
 
-/* check the state of each button */
-void updateButtons(snespad *pad, uint16_t *buttons);
+/* check the state of each button of each controller */
+void updateButtons( snespad *pad, buttonstates* buttons );
 
 /* set the GPIO pins as input or output pins */
-void initializePad(snespad *pad);
+void initializePads( snespad *pad );
 
 #endif
 
