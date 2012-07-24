@@ -52,7 +52,7 @@ lsmod
 The module is loaded with
 
 ```shell
-modprobe uinput
+sudo modprobe uinput
 ```
 
 If you want to have the uinput module automatically loaded, you can add "uinput" to the file 
@@ -61,8 +61,10 @@ If you want to have the uinput module automatically loaded, you can add "uinput"
 SNESDev has to be run as background process with
 
 ```shell
-/SNESDev-RPi/bin/SNESDev &
+sudo ~/SNESDev-RPi/bin/SNESDev &
 ```
+
+In order to access the uinput device SNESDev has to be run as root. This is (obviously) not so nice and is currently an issue. If you have a solution or suggestion for that, feel free to submit a pull request or send me a mail!
 
 For comments, corrections, and suggestions visit https://github.com/petrockblog/SNESDev-RPi.
 
