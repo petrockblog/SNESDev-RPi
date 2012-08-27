@@ -2,7 +2,7 @@
  * SNESDev - Simulates a virtual keyboard for two SNES controllers that are 
  * connected to the GPIO pins of the Raspberry Pi.
  *
- * (c) Copyright 2012  Florian Müller (petrockblog@flo-mueller.com)
+ * (c) Copyright 2012  Florian M√ºller (petrockblog@flo-mueller.com)
  *
  * SNESDev homepage: https://github.com/petrockblog/SNESDev-RPi
  *
@@ -41,13 +41,11 @@
 #define FRAMEWAIT 20
 
 /* set the GPIO pins of the button and the LEDs. */
-#define BUTTONPIN  RPI_GPIO_P1_11
-#define BUTTONLOW  RPI_GPIO_P1_12
-#define BUTTONHIGH RPI_GPIO_P1_13
+#define BUTTONRESET RPI_GPIO_P1_13
 
 /* Setup the uinput device */
 int setup_uinput_device() {
-	int uinp_fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
+  int uinp_fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
 	if (uinp_fd == 0) {
 		printf("Unable to open /dev/uinput\n");
 		return -1;
@@ -101,22 +99,6 @@ void send_key_event(int fd, unsigned int keycode, int keyvalue) {
 	}
 }
 
-/* checks the state of the button and sets the two LEDs accordingly */
-void setButtonLEDs() {
-  
-  	// read the state of the button into a local variable
-	uint8_t buttonState = bcm2835_gpio_lev(BUTTONPIN);
-  
-	// set the LED using the state of the button:
-	if ( buttonState==HIGH ) {
-		bcm2835_gpio_write(BUTTONLOW, LOW);
-		bcm2835_gpio_write(BUTTONHIGH, HIGH);
-	} else {
-		bcm2835_gpio_write(BUTTONLOW, HIGH);
-		bcm2835_gpio_write(BUTTONHIGH, LOW);
-	}
-
-}
 
 /* checks, if a button on the pad is pressed and sends an event according the button state. */
 void processBtn(uint16_t buttons, uint16_t mask, uint16_t key, int uinh) {
@@ -127,6 +109,17 @@ void processBtn(uint16_t buttons, uint16_t mask, uint16_t key, int uinh) {
 	}
 }
 
+void readResetButton(int uinh){
+	
+	// read the state of the button into a local variable
+	uint8_t buttonState = bcm2835_gpio_lev(BUTTONRESET);
+	
+	if ( buttonState==HIGH ) {
+		send_key_event(uinh, KEY_ESC, 1);
+	} else {
+		send_key_event(uinh, KEY_ESC, 0);
+	}
+}
 
 int main(int argc, char *argv[]) {
 
@@ -135,10 +128,10 @@ int main(int argc, char *argv[]) {
     if (!bcm2835_init())
         return 1;
 
-	// initialize button and LEDs
-    bcm2835_gpio_fsel(BUTTONPIN,  BCM2835_GPIO_FSEL_INPT);
-    bcm2835_gpio_fsel(BUTTONLOW,  BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(BUTTONHIGH, BCM2835_GPIO_FSEL_OUTP);
+    // Set RPI pin to be an input
+    bcm2835_gpio_fsel(BUTTONRESET, BCM2835_GPIO_FSEL_INPT);
+    //  with a pullup
+    bcm2835_gpio_set_pud(BUTTONRESET, BCM2835_GPIO_PUD_DOWN);
 
     /* initialize controller structures with GPIO pin assignments */
 	snespad pads;
@@ -161,8 +154,8 @@ int main(int argc, char *argv[]) {
 	/* enter the main loop */
 	while ( 1 ) {
 
-		/* set LEDs according to button. Not used so far. */
-		// setButtonLEDs();
+		/* Read the reset button state */
+		readResetButton(uinp_fd);
 
 		/* read states of the buttons */
 		updateButtons(&pads, &buttons);
@@ -171,10 +164,10 @@ int main(int argc, char *argv[]) {
 		/* key events for first controller */
         processBtn(buttons.buttons1, SNES_A,     KEY_X,          uinp_fd);
         processBtn(buttons.buttons1, SNES_B,     KEY_Z,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_X,     KEY_S,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_Y,     KEY_A,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_L,     KEY_Q,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_R,     KEY_W,          uinp_fd);
+        //processBtn(buttons.buttons1, SNES_X,     KEY_S,          uinp_fd);
+        //processBtn(buttons.buttons1, SNES_Y,     KEY_A,          uinp_fd);
+        //processBtn(buttons.buttons1, SNES_L,     KEY_Q,          uinp_fd);
+        //processBtn(buttons.buttons1, SNES_R,     KEY_W,          uinp_fd);
         processBtn(buttons.buttons1, SNES_SELECT,KEY_RIGHTSHIFT, uinp_fd);
         processBtn(buttons.buttons1, SNES_START, KEY_ENTER,      uinp_fd);
         processBtn(buttons.buttons1, SNES_LEFT,  KEY_LEFT,       uinp_fd);
@@ -185,10 +178,10 @@ int main(int argc, char *argv[]) {
 		// key events for second controller 
         processBtn(buttons.buttons2, SNES_A,     KEY_E, uinp_fd);
         processBtn(buttons.buttons2, SNES_B,     KEY_R, uinp_fd);
-        processBtn(buttons.buttons2, SNES_X,     KEY_T, uinp_fd);
-        processBtn(buttons.buttons2, SNES_Y,     KEY_Y, uinp_fd);
-        processBtn(buttons.buttons2, SNES_L,     KEY_U, uinp_fd);
-        processBtn(buttons.buttons2, SNES_R,     KEY_I, uinp_fd);
+        //processBtn(buttons.buttons2, SNES_X,     KEY_T, uinp_fd);
+        //processBtn(buttons.buttons2, SNES_Y,     KEY_Y, uinp_fd);
+        //processBtn(buttons.buttons2, SNES_L,     KEY_U, uinp_fd);
+        //processBtn(buttons.buttons2, SNES_R,     KEY_I, uinp_fd);
         processBtn(buttons.buttons2, SNES_SELECT,KEY_O, uinp_fd);
         processBtn(buttons.buttons2, SNES_START, KEY_P, uinp_fd);
         processBtn(buttons.buttons2, SNES_LEFT,  KEY_C, uinp_fd);
