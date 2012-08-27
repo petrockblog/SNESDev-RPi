@@ -26,175 +26,54 @@
  * Raspberry Pi is a trademark of the Raspberry Pi Foundation.
  */
 
-#include <linux/input.h>
-#include <linux/uinput.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <bcm2835.h>
-
 #include "SNESpad.h"
 
-/* time to wait after each cycle */
-#define FRAMEWAIT 20
+/* define to enable debug outputs */
+//#define DEBUG 
 
-/* set the GPIO pins of the button and the LEDs. */
-#define BUTTONRESET RPI_GPIO_P1_13
+/* set the GPIO pins as input or output pins */
+void initializePads( snespad *pad ) {
+  printf("Initializing pad.\n");
+  bcm2835_gpio_fsel( pad->strobe, BCM2835_GPIO_FSEL_OUTP );
+  bcm2835_gpio_fsel( pad->clock,  BCM2835_GPIO_FSEL_OUTP );
+  bcm2835_gpio_fsel( pad->data1,   BCM2835_GPIO_FSEL_INPT );
+  bcm2835_gpio_fsel( pad->data2,   BCM2835_GPIO_FSEL_INPT );
 
-/* Setup the uinput device */
-int setup_uinput_device() {
-  int uinp_fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
-	if (uinp_fd == 0) {
-		printf("Unable to open /dev/uinput\n");
-		return -1;
-	}
-
-	struct uinput_user_dev uinp;
-	memset(&uinp, 0, sizeof(uinp)); 
-	strncpy(uinp.name, "SNES-to-Keyboard Device", strlen("SNES-to-Keyboard Device"));
-	uinp.id.version = 4;
-	uinp.id.bustype = BUS_USB;
-	uinp.id.product = 1;
-	uinp.id.vendor = 1;
-
-	// Setup the uinput device
-	ioctl(uinp_fd, UI_SET_EVBIT, EV_KEY);
-	ioctl(uinp_fd, UI_SET_EVBIT, EV_REL);
-	int i = 0;
-	for (i = 0; i < 256; i++) {
-		ioctl(uinp_fd, UI_SET_KEYBIT, i);
-	}
-
-	/* Create input device into input sub-system */
-	write(uinp_fd, &uinp, sizeof(uinp));
-	if (ioctl(uinp_fd, UI_DEV_CREATE)) {
-		printf("Unable to create UINPUT device.");
-		return -1;
-	}
-
-	return uinp_fd;
+  bcm2835_gpio_write( pad->strobe, LOW );
+  bcm2835_gpio_write( pad->clock, LOW );
 }
 
-/* sends a key event to the virtual device */
-void send_key_event(int fd, unsigned int keycode, int keyvalue) {
-	struct input_event event;
-	gettimeofday(&event.time, NULL);
+/* check the state of each button and each controller */
+void updateButtons( snespad *pad, buttonstates* buttons ) {
 
-	event.type = EV_KEY;
-	event.code = keycode;
-	event.value = keyvalue;
+  int i;
 
-	if (write(fd, &event, sizeof(event)) < 0) {
-		printf("simulate key error\n");
-	}
+  bcm2835_gpio_write( pad->strobe, HIGH );
+  delayMicroseconds(2);
+  bcm2835_gpio_write( pad->strobe, LOW );
+  delayMicroseconds(2);
 
-	event.type = EV_SYN;
-	event.code = SYN_REPORT;
-	event.value = 0;
-	write(fd, &event, sizeof(event));
-	if (write(fd, &event, sizeof(event)) < 0) {
-		printf("simulate key error\n");
-	}
-}
+  buttons->buttons1 = 0;
+  buttons->buttons2 = 0;
+  for (i = 0; i < 8; i++) {
 
+    uint8_t curpin1 = bcm2835_gpio_lev(pad->data1);
+    uint8_t curpin2 = bcm2835_gpio_lev(pad->data2);
+    #ifdef DEBUG
+      printf("1: %d    2: %d\n",curpin1,curpin2);
+    #endif
+    bcm2835_gpio_write( pad->clock, HIGH );
+    delayMicroseconds(2);
+    bcm2835_gpio_write( pad->clock, LOW );
+    delayMicroseconds(2);
 
-/* checks, if a button on the pad is pressed and sends an event according the button state. */
-void processBtn(uint16_t buttons, uint16_t mask, uint16_t key, int uinh) {
-	if ( (buttons & mask) == mask ) {
-		send_key_event(uinh, key, 1);
-	} else {
-		send_key_event(uinh, key, 0);
-	}
-}
+    if( curpin1==LOW ) {
+      buttons->buttons1 |= (1<<i);
+    } 
+    if( curpin2==LOW ) {
+      buttons->buttons2 |= (1<<i);
+    } 
+    
+  }
 
-void readResetButton(int uinh){
-	
-	// read the state of the button into a local variable
-	uint8_t buttonState = bcm2835_gpio_lev(BUTTONRESET);
-	
-	if ( buttonState==HIGH ) {
-		send_key_event(uinh, KEY_ESC, 1);
-	} else {
-		send_key_event(uinh, KEY_ESC, 0);
-	}
-}
-
-int main(int argc, char *argv[]) {
-
-    buttonstates buttons;
-
-    if (!bcm2835_init())
-        return 1;
-
-    // Set RPI pin to be an input
-    bcm2835_gpio_fsel(BUTTONRESET, BCM2835_GPIO_FSEL_INPT);
-    //  with a pullup
-    bcm2835_gpio_set_pud(BUTTONRESET, BCM2835_GPIO_PUD_DOWN);
-
-    /* initialize controller structures with GPIO pin assignments */
-	snespad pads;
-	pads.clock  = RPI_GPIO_P1_18;
-	pads.strobe = RPI_GPIO_P1_16;
-	pads.data1  = RPI_GPIO_P1_22;
-	pads.data2  = RPI_GPIO_P1_15;
-
-
-	/* set GPIO pins as input or output pins */
-	initializePads( &pads );
-
-	/* intialize virtual input device */
-	int uinp_fd;
-	if ((uinp_fd = setup_uinput_device()) < 0) {
-		printf("Unable to find uinput device\n");
-		return -1;
-	}
-
-	/* enter the main loop */
-	while ( 1 ) {
-
-		/* Read the reset button state */
-		readResetButton(uinp_fd);
-
-		/* read states of the buttons */
-		updateButtons(&pads, &buttons);
-
-		/* send an event (pressed or released) for each button */
-		/* key events for first controller */
-        processBtn(buttons.buttons1, SNES_A,     KEY_X,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_B,     KEY_Z,          uinp_fd);
-        //processBtn(buttons.buttons1, SNES_X,     KEY_S,          uinp_fd);
-        //processBtn(buttons.buttons1, SNES_Y,     KEY_A,          uinp_fd);
-        //processBtn(buttons.buttons1, SNES_L,     KEY_Q,          uinp_fd);
-        //processBtn(buttons.buttons1, SNES_R,     KEY_W,          uinp_fd);
-        processBtn(buttons.buttons1, SNES_SELECT,KEY_RIGHTSHIFT, uinp_fd);
-        processBtn(buttons.buttons1, SNES_START, KEY_ENTER,      uinp_fd);
-        processBtn(buttons.buttons1, SNES_LEFT,  KEY_LEFT,       uinp_fd);
-        processBtn(buttons.buttons1, SNES_RIGHT, KEY_RIGHT,      uinp_fd);
-        processBtn(buttons.buttons1, SNES_UP,    KEY_UP,         uinp_fd);
-        processBtn(buttons.buttons1, SNES_DOWN,  KEY_DOWN,       uinp_fd);
-
-		// key events for second controller 
-        processBtn(buttons.buttons2, SNES_A,     KEY_E, uinp_fd);
-        processBtn(buttons.buttons2, SNES_B,     KEY_R, uinp_fd);
-        //processBtn(buttons.buttons2, SNES_X,     KEY_T, uinp_fd);
-        //processBtn(buttons.buttons2, SNES_Y,     KEY_Y, uinp_fd);
-        //processBtn(buttons.buttons2, SNES_L,     KEY_U, uinp_fd);
-        //processBtn(buttons.buttons2, SNES_R,     KEY_I, uinp_fd);
-        processBtn(buttons.buttons2, SNES_SELECT,KEY_O, uinp_fd);
-        processBtn(buttons.buttons2, SNES_START, KEY_P, uinp_fd);
-        processBtn(buttons.buttons2, SNES_LEFT,  KEY_C, uinp_fd);
-        processBtn(buttons.buttons2, SNES_RIGHT, KEY_B, uinp_fd);
-        processBtn(buttons.buttons2, SNES_UP,    KEY_F, uinp_fd);
-        processBtn(buttons.buttons2, SNES_DOWN,  KEY_V, uinp_fd);
-
-		/* wait for some time to keep the CPU load low */
-		delay(FRAMEWAIT);
-	}
-
-	/* Destroy the input device */
-	ioctl(uinp_fd, UI_DEV_DESTROY);
-	/* Close the UINPUT device */
-	close(uinp_fd);
 }
