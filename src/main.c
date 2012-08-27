@@ -25,7 +25,7 @@
  *
  * Raspberry Pi is a trademark of the Raspberry Pi Foundation.
  */
-
+ 
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <sys/time.h>
