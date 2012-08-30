@@ -1,3 +1,5 @@
+Below is PetRockBlogs Original installation instructions.
+
 SNESDev-RPi
 ===========
 
