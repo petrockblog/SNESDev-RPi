@@ -36,7 +36,7 @@
 #include <unistd.h>
 #include <bcm2835.h>
 #include <signal.h>
-
+#include <time.h>
 
 #include "SNESpad.h"
 
@@ -48,6 +48,8 @@
 
 int uinp_fd;
 int doRun, pollButton, pollPads;
+time_t timePressed;
+uint8_t lastBtnState;
 
 /* Signal callback function */
 void sig_handler(int signo) {
@@ -119,18 +121,31 @@ void send_key_event(int fd, unsigned int keycode, int keyvalue) {
 	}
 }
 
-/* checks the state of the button and sets the two LEDs accordingly */
+/* checks the state of the button and decides for a short or long button press */
 void checkButton(int uinh) {
   
   	// read the state of the button into a local variable
 	uint8_t buttonState = bcm2835_gpio_lev(BUTTONPIN);
   
-	// send key if button is pressed:
-	if ( buttonState==HIGH ) {
-		send_key_event(uinh, KEY_ESC,1);
-	} else {
-		send_key_event(uinh, KEY_ESC,0);
+	if (buttonState==HIGH && lastBtnState==LOW) {
+		timePressed=time(NULL);
+	} else if (buttonState==LOW && lastBtnState==HIGH) {
+		time_t curTime = time(NULL);
+		double dif = difftime(curTime,timePressed);
+		if ( dif>=3 ) {
+			// Shutting down
+			pollButton = 0;
+  			pollPads = 0;
+			system("shutdown -t 3 -h now");
+		} else {
+			// Sending ESC
+			send_key_event(uinh, KEY_ESC,1);
+			usleep(50000);
+			send_key_event(uinh, KEY_ESC,0);
+		}
+
 	}
+	lastBtnState=buttonState;
 
 }
 
