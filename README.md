@@ -66,6 +66,21 @@ sudo ~/SNESDev-RPi/bin/SNESDev &
 
 In order to access the uinput device SNESDev has to be run as root. This is (obviously) not so nice and is currently an issue. If you have a solution or suggestion for that, feel free to submit a pull request or send me a mail!
 
+Running SNESDev as a service
+----------------------------
+
+Thanks to Ewan Meadows, SNESDev-RPi comes woth a script that allows SNESDev to be run as a service. The installation command for that are
+
+```shell
+chmod +x ./scripts/SNESDev
+sudo cp ./bin/SNESDev /usr/local/bin/
+sudo cp ./scripts/SNESDev /etc/init.d/
+# This command installs the init.d script so it automatically starts on boot
+sudo update-rc.d SNESDev defaults
+# This command starts the daemon now so no need for a reboot
+sudo service SNESDev start
+```
+
 For comments, corrections, and suggestions visit https://github.com/petrockblog/SNESDev-RPi.
 
 Have fun!
