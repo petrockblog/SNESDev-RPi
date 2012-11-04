@@ -42,6 +42,7 @@
 
 /* time to wait after each cycle */
 #define FRAMEWAIT 20
+#define FRAMEWAITLONG 200
 
 /* set the GPIO pins of the button and the LEDs. */
 #define BUTTONPIN  RPI_GPIO_P1_11
@@ -270,7 +271,11 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* wait for some time to keep the CPU load low */
-		delay(FRAMEWAIT);
+		if (pollButton && !pollPads) {
+			delay(FRAMEWAITLONG);
+		} else {
+			delay(FRAMEWAIT);
+		}
 	}
 
 	return 0;
