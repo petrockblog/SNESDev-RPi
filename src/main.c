@@ -134,9 +134,13 @@ void checkButton(int uinh) {
 		time_t curTime = time(NULL);
 		double dif = difftime(curTime,timePressed);
 		if ( dif>=3 ) {
-			// Shutting down
+			// send F4 (quit Emulation Station) and shut down
 			pollButton = 0;
   			pollPads = 0;
+			send_key_event(uinh, KEY_F4,1);
+			usleep(50000);
+			send_key_event(uinh, KEY_F4,0);
+
 			system("shutdown -t 3 -h now");
 		} else {
 			// Sending ESC
@@ -225,8 +229,9 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	if (signal(SIGINT, sig_handler) == SIG_ERR)
-  		printf("\n[SNESDev-Rpi] Cannot catch SIGINT\n");
+	if (signal(SIGINT, sig_handler) == SIG_ERR)	printf("\n[SNESDev-Rpi] Cannot catch SIGINT\n");
+	if (signal(SIGQUIT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGQUIT\n");
+	if (signal(SIGABRT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGABRT\n");
 
 	/* enter the main loop */
 	while ( doRun ) {

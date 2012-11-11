@@ -76,4 +76,12 @@ void updateButtons( snespad *pad, buttonstates* buttons ) {
     
   }
 
+  // set to 0 if the according controller is not connected
+  if( (buttons->buttons1 & 0xFFF) == 0xFFF ) {
+    buttons->buttons1 = 0;
+  }
+  if( (buttons->buttons2 & 0xFFF) == 0xFFF ) {
+    buttons->buttons2 = 0;
+  }
+
 }
