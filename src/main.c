@@ -160,12 +160,11 @@ void checkButton(int uinh) {
 					send_key_event(uinh, KEY_R,0);
 			 	} else if (btnPressCtr==3) {
 					// Sending ESC
-					printf("Sending ESC.\n");
 					send_key_event(uinh, KEY_ESC,1);
 					usleep(50000);
 					send_key_event(uinh, KEY_ESC,0);
 				} else if ( btnPressCtr==5 ) {
-					printf("Shutting down.\n");
+					// shutting down
 					pollButton = 0;
 			 		pollPads = 0;
 					send_key_event(uinh, KEY_F4,1);
