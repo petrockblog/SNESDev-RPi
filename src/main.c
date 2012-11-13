@@ -42,15 +42,20 @@
 
 /* time to wait after each cycle */
 #define FRAMEWAIT 20
-#define FRAMEWAITLONG 200
+#define FRAMEWAITLONG 100
 
 /* set the GPIO pins of the button and the LEDs. */
 #define BUTTONPIN  RPI_GPIO_P1_11
+#define BTNSTATE_IDLE 0
+#define BTNSTATE_PRESS 1
+#define BTNSTATE_RELEASE 2
+
 
 int uinp_fd;
 int doRun, pollButton, pollPads;
-time_t timePressed;
-uint8_t lastBtnState;
+time_t btnLastTime;
+uint8_t btnState;
+uint8_t btnPressCtr;
 
 /* Signal callback function */
 void sig_handler(int signo) {
@@ -128,30 +133,59 @@ void checkButton(int uinh) {
   	// read the state of the button into a local variable
 	uint8_t buttonState = bcm2835_gpio_lev(BUTTONPIN);
   
-	if (buttonState==HIGH && lastBtnState==LOW) {
-		timePressed=time(NULL);
-	} else if (buttonState==LOW && lastBtnState==HIGH) {
-		time_t curTime = time(NULL);
-		double dif = difftime(curTime,timePressed);
-		if ( dif>=3 ) {
-			// send F4 (quit Emulation Station) and shut down
-			pollButton = 0;
-  			pollPads = 0;
-			send_key_event(uinh, KEY_F4,1);
-			usleep(50000);
-			send_key_event(uinh, KEY_F4,0);
+  	// three-state machine:
+  	// - press and hold: send "r" key (for rewind function of RetroArch)
+  	// - press and release three times: send "ESC"
+  	// - press and release five times: shutdown
+	switch ( btnState ) {
+		case BTNSTATE_IDLE:
+			if (buttonState==HIGH ) {
+				btnLastTime=time(NULL);
+				btnState = BTNSTATE_PRESS;
+				btnPressCtr += 1;
+			}
+			break;
+		case BTNSTATE_PRESS:
+			if (buttonState==LOW ) {
+				btnLastTime=time(NULL);
+				btnState = BTNSTATE_RELEASE;
+			} else if (buttonState==HIGH && btnPressCtr==1 && difftime(time(NULL),btnLastTime)>1) {
+				send_key_event(uinh, KEY_R,1);
+			}
+			break;
+		case BTNSTATE_RELEASE:
+		 	if (buttonState==LOW && difftime(time(NULL),btnLastTime)>1 ) {
 
-			system("shutdown -t 3 -h now");
-		} else {
-			// Sending ESC
-			send_key_event(uinh, KEY_ESC,1);
-			usleep(50000);
-			send_key_event(uinh, KEY_ESC,0);
-		}
+			 	if (btnPressCtr==1) {
+					send_key_event(uinh, KEY_R,0);
+			 	} else if (btnPressCtr==3) {
+					// Sending ESC
+					printf("Sending ESC.\n");
+					send_key_event(uinh, KEY_ESC,1);
+					usleep(50000);
+					send_key_event(uinh, KEY_ESC,0);
+				} else if ( btnPressCtr==5 ) {
+					printf("Shutting down.\n");
+					pollButton = 0;
+			 		pollPads = 0;
+					send_key_event(uinh, KEY_F4,1);
+					usleep(50000);
+					send_key_event(uinh, KEY_F4,0);
 
+					system("shutdown -t 3 -h now");
+				}
+
+				btnLastTime=time(NULL);
+				btnState = BTNSTATE_IDLE;
+				btnPressCtr = 0;
+			} else if (buttonState==HIGH  ) {
+				btnLastTime=time(NULL);
+				btnState = BTNSTATE_PRESS;
+				btnPressCtr += 1;
+			}
+			break;
 	}
-	lastBtnState=buttonState;
-
+	// printf("State: %d, ctr: %d\n",btnState,btnPressCtr );
 }
 
 /* checks, if a button on the pad is pressed and sends an event according the button state. */
@@ -171,6 +205,9 @@ int main(int argc, char *argv[]) {
 	pollButton = 1;
 	pollPads = 1;
 	doRun = 1;
+
+	btnState = BTNSTATE_IDLE;
+	btnPressCtr = 0;
 
 	// check command line arguments
 	if (argc > 1) {
