@@ -66,6 +66,18 @@ sudo ~/SNESDev-RPi/bin/SNESDev &
 
 In order to access the uinput device SNESDev has to be run as root. This is (obviously) not so nice and is currently an issue. If you have a solution or suggestion for that, feel free to submit a pull request or send me a mail!
 
+Running SNESDev with Arguments
+------------------------------
+
+SNESDev can be started with an argument that enables the polling of only the button, only the game pads, or both:
+
+```shell
+SNESDev 1 poll controllers only
+SNESDev 2 poll button only
+SNESDev 3 poll controllers and button (DEFAULT)
+```
+
+
 Running SNESDev as a service
 ----------------------------
 
@@ -80,6 +92,15 @@ sudo update-rc.d SNESDev defaults
 # This command starts the daemon now so no need for a reboot
 sudo service SNESDev start
 ```
+
+Button Polling
+--------------
+
+If you use the functionality for polling a button (on GPIOin P1-11), a three-state automaton is implemented:
+ 
+- press and hold: send "r" key (for rewind function of RetroArch)
+- press and release three times: send "ESC"
+- press and release five times: shutdown
 
 For comments, corrections, and suggestions visit https://github.com/petrockblog/SNESDev-RPi.
 
