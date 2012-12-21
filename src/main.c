@@ -39,13 +39,15 @@
 #include <time.h>
 
 #include "SNESpad.h"
+#include "cpuinfo.h"
 
 /* time to wait after each cycle */
 #define FRAMEWAIT 20
 #define FRAMEWAITLONG 100
 
 /* set the GPIO pins of the button and the LEDs. */
-#define BUTTONPIN  RPI_GPIO_P1_11
+#define BUTTONPIN     RPI_GPIO_P1_11
+#define BUTTONPIN_V2  RPI_V2_GPIO_P1_11
 #define BTNSTATE_IDLE 0
 #define BTNSTATE_PRESS 1
 #define BTNSTATE_RELEASE 2
@@ -56,6 +58,7 @@ int doRun, pollButton, pollPads;
 time_t btnLastTime;
 uint8_t btnState;
 uint8_t btnPressCtr;
+int buttonPin;
 
 /* Signal callback function */
 void sig_handler(int signo) {
@@ -131,7 +134,7 @@ void send_key_event(int fd, unsigned int keycode, int keyvalue) {
 void checkButton(int uinh) {
   
   	// read the state of the button into a local variable
-	uint8_t buttonState = bcm2835_gpio_lev(BUTTONPIN);
+	uint8_t buttonState = bcm2835_gpio_lev(buttonPin);
   
   	// three-state machine:
   	// - press and hold: send "r" key (for rewind function of RetroArch)
@@ -207,6 +210,12 @@ int main(int argc, char *argv[]) {
 
 	btnState = BTNSTATE_IDLE;
 	btnPressCtr = 0;
+    if (get_rpi_revision()==1) {
+    	buttonPin = BUTTONPIN;
+    } else {
+		buttonPin = BUTTONPIN_V2;
+    }
+
 
 	// check command line arguments
 	if (argc > 1) {
@@ -240,7 +249,7 @@ int main(int argc, char *argv[]) {
         return 1;
 
 	// initialize button and LEDs
-    bcm2835_gpio_fsel(BUTTONPIN,  BCM2835_GPIO_FSEL_INPT);
+    bcm2835_gpio_fsel(buttonPin,  BCM2835_GPIO_FSEL_INPT);
 
     /* initialize controller structures with GPIO pin assignments */
 
@@ -250,11 +259,20 @@ int main(int argc, char *argv[]) {
 	// pads.data1  = RPI_GPIO_P1_22;
 	// pads.data2  = RPI_GPIO_P1_15;
 
-    // pin out used pi gamecon GPIO driver
-	pads.clock  = RPI_GPIO_P1_19;
-	pads.strobe = RPI_GPIO_P1_23;
-	pads.data1  = RPI_GPIO_P1_07;
-	pads.data2  = RPI_GPIO_P1_05;
+    // check board revision and set pins to be used
+    // these are acutally also used by the gamecon driver
+    if (get_rpi_revision()==1)
+    {
+		pads.clock  = RPI_GPIO_P1_19;
+		pads.strobe = RPI_GPIO_P1_23;
+		pads.data1  = RPI_GPIO_P1_07;
+		pads.data2  = RPI_GPIO_P1_05;
+    } else {
+		pads.clock  = RPI_V2_GPIO_P1_19;
+		pads.strobe = RPI_V2_GPIO_P1_23;
+		pads.data1  = RPI_V2_GPIO_P1_07;
+		pads.data2  = RPI_V2_GPIO_P1_05;
+    }
 
 	/* set GPIO pins as input or output pins */
 	initializePads( &pads );
