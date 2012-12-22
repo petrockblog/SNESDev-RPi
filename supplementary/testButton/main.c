@@ -1,4 +1,5 @@
 #include <bcm2835.h>
+#include <stdio.h>
 #include "cpuinfo.h"
 
 // Button on RPi pin GPIO 11
