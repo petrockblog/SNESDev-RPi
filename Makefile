@@ -4,7 +4,7 @@ LIBS=-lbcm2835 -lrt
 INCLUDES=-Iinclude
 EXECUTABLE=SNESDev
 
-SNESDev: obj/main.o obj/SNESpad.o
+SNESDev: obj/main.o obj/SNESpad.o obj/cpuinfo.o
 	$(CC) obj/main.o obj/SNESpad.o obj/cpuinfo.o $(LIBS) -o bin/$(EXECUTABLE)
 
 obj/main.o: src/main.c
