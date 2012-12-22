@@ -3,7 +3,7 @@
 
 // Button on RPi pin GPIO 11
 #define PIN    RPI_GPIO_P1_11
-#define PIN_V2 RPI_GPIO_V2_P1_11
+#define PIN_V2 RPI_V2_GPIO_P1_11
 
 int main(int argc, char **argv)
 {
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
-    	if (bcm2835_gpio_read(usepin)==LOW)
+    	if (bcm2835_gpio_lev(usepin)==LOW)
     	{
     		printf("Button state: NOT PRESSED\n");
     	} else {
