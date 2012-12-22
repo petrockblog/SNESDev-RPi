@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -Wall -O3
-LIBS=-lbcm2835
+LIBS=-lbcm2835 -lrt
 INCLUDES=-Iinclude
 EXECUTABLE=testButton
 
