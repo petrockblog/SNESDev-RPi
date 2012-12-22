@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     } else {
     	usepin = PIN_V2;
     }
-    bcm2835_gpio_fsel(usepin, BCM2835_GPIO_FSEL_INP);
+    bcm2835_gpio_fsel(usepin, BCM2835_GPIO_FSEL_INPT);
 
     while (1)
     {
