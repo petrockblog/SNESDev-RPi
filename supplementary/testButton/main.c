@@ -1,11 +1,10 @@
-#include <bcm2835.h>
 #include <stdio.h>
+#include <bcm2835.h>
 #include "cpuinfo.h"
 
 // Button on RPi pin GPIO 11
 #define PIN    RPI_GPIO_P1_11
 #define PIN_V2 RPI_V2_GPIO_P1_11
-
 int main(int argc, char **argv)
 {
     int usepin;
