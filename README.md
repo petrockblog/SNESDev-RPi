@@ -16,18 +16,19 @@ sudo apt-get install -y git
 SNESDev needs the BCM 2835 library installed. It is downloaded and installed with
 
 ```shell
-# install BCM library
 echo "Installing BCM2835 library"
 cd
-wget http://www.open.com.au/mikem/bcm2835/bcm2835-1.3.tar.gz
-tar -zxvf bcm2835-1.3.tar.gz
-cd bcm2835-1.3
+wget http://www.open.com.au/mikem/bcm2835/bcm2835-1.14.tar.gz
+tar -zxvf bcm2835-1.14.tar.gz
+cd bcm2835-1.14
 ./configure
+make clean
 make
-sudo make install
+make install
 cd
-rm bcm2835-1.3.tar.gz
+rm bcm2835-1.14.tar.gz
 ```
+
 SNESDev is downloaded and installed with
 
 ```shell
