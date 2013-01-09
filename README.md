@@ -24,7 +24,7 @@ cd bcm2835-1.14
 ./configure
 make clean
 make
-make install
+sudo make install
 cd
 rm bcm2835-1.14.tar.gz
 ```
