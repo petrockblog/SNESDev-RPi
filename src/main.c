@@ -2,7 +2,7 @@
  * SNESDev - Simulates a virtual keyboard for two SNES controllers that are 
  * connected to the GPIO pins of the Raspberry Pi.
  *
- * (c) Copyright 2012  Florian Müller (petrockblog@flo-mueller.com)
+ * (c) Copyright 2012  Florian Müller (petrockblock@gmail.com)
  *
  * SNESDev homepage: https://github.com/petrockblog/SNESDev-RPi
  *
@@ -53,7 +53,7 @@
 #define BTNSTATE_RELEASE 2
 
 
-int uinp_fd;
+int uinp_kbd, uinp_gp1, uinp_gp2;
 int doRun, pollButton, pollPads;
 time_t btnLastTime;
 uint8_t btnState;
@@ -63,19 +63,46 @@ int buttonPin;
 /* Signal callback function */
 void sig_handler(int signo) {
   if ((signo == SIGINT) | (signo == SIGKILL) | (signo == SIGQUIT) | (signo == SIGABRT)) {
-  	printf("Releasing SNESDev-Rpi device.\n");
+  	printf("Releasing SNESDev-Rpi device(s).\n");
   	pollButton = 0;
   	pollPads = 0;
-	/* Destroy the input device */
-	ioctl(uinp_fd, UI_DEV_DESTROY);
-	/* Close the UINPUT device */
-	close(uinp_fd);  	
+	/* Destroy the input devices */
+	ioctl(uinp_kbd, UI_DEV_DESTROY);
+	ioctl(uinp_gp1, UI_DEV_DESTROY);
+	ioctl(uinp_gp2, UI_DEV_DESTROY);
+
+	/* Close the UINPUT devices */
+	close(uinp_kbd);  	
+	close(uinp_gp1);  	
+	close(uinp_gp2);  	
 	doRun = 0;
   }
 }
 
+/* sends a key event to the virtual device */
+void send_key_event(int fd, unsigned int keycode, int keyvalue, unsigned int evtype) {
+	struct input_event event;
+	gettimeofday(&event.time, NULL);
+
+	event.type = evtype;
+	event.code = keycode;
+	event.value = keyvalue;
+
+	if (write(fd, &event, sizeof(event)) < 0) {
+		printf("[SNESDev-Rpi] Simulate key error\n");
+	}
+
+	event.type = EV_SYN;
+	event.code = SYN_REPORT;
+	event.value = 0;
+	write(fd, &event, sizeof(event));
+	if (write(fd, &event, sizeof(event)) < 0) {
+		printf("[SNESDev-Rpi] Simulate key error\n");
+	}
+}
+
 /* Setup the uinput device */
-int setup_uinput_device() {
+int setup_uinput_keyboard_device() {
 	int uinp_fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
 	if (uinp_fd == 0) {
 		printf("Unable to open /dev/uinput\n");
@@ -91,6 +118,7 @@ int setup_uinput_device() {
 	uinp.id.vendor = 1;
 
 	// Setup the uinput device
+	// keyboard
 	ioctl(uinp_fd, UI_SET_EVBIT, EV_KEY);
 	ioctl(uinp_fd, UI_SET_EVBIT, EV_REL);
 	int i = 0;
@@ -108,26 +136,55 @@ int setup_uinput_device() {
 	return uinp_fd;
 }
 
-/* sends a key event to the virtual device */
-void send_key_event(int fd, unsigned int keycode, int keyvalue) {
-	struct input_event event;
-	gettimeofday(&event.time, NULL);
-
-	event.type = EV_KEY;
-	event.code = keycode;
-	event.value = keyvalue;
-
-	if (write(fd, &event, sizeof(event)) < 0) {
-		printf("[SNESDev-Rpi] Simulate key error\n");
+/* Setup the uinput device */
+int setup_uinput_gamepad_device() {
+	int uinp_fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
+	if (uinp_fd == 0) {
+		printf("Unable to open /dev/uinput\n");
+		return -1;
 	}
 
-	event.type = EV_SYN;
-	event.code = SYN_REPORT;
-	event.value = 0;
-	write(fd, &event, sizeof(event));
-	if (write(fd, &event, sizeof(event)) < 0) {
-		printf("[SNESDev-Rpi] Simulate key error\n");
+	struct uinput_user_dev uinp;
+	memset(&uinp, 0, sizeof(uinp)); 
+	strncpy(uinp.name, "SNES-to-Gamepad Device", strlen("SNES-to-Gamepad Device"));
+	uinp.id.version = 4;
+	uinp.id.bustype = BUS_USB;
+	uinp.id.product = 1;
+	uinp.id.vendor = 1;
+
+	// Setup the uinput device
+	ioctl(uinp_fd, UI_SET_EVBIT, EV_KEY);
+	ioctl(uinp_fd, UI_SET_EVBIT, EV_REL);
+
+	// gamepad, buttons
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_A);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_B);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_X);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_Y);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_TL);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_TR);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_SELECT);
+	ioctl(uinp_fd, UI_SET_KEYBIT, BTN_START);
+	// gamepad, directions
+	ioctl(uinp_fd, UI_SET_EVBIT, EV_ABS);
+	ioctl(uinp_fd, UI_SET_ABSBIT, ABS_X);
+	ioctl(uinp_fd, UI_SET_ABSBIT, ABS_Y);
+	uinp.absmin[ABS_X] = 0;
+	uinp.absmax[ABS_X] = 4;
+	uinp.absmin[ABS_Y] = 0;
+	uinp.absmax[ABS_Y] = 4;
+
+	/* Create input device into input sub-system */
+	write(uinp_fd, &uinp, sizeof(uinp));
+	if (ioctl(uinp_fd, UI_DEV_CREATE)) {
+		printf("[SNESDev-Rpi] Unable to create UINPUT device.");
+		return -1;
 	}
+
+	send_key_event(uinp_fd, ABS_X, 2, EV_ABS);
+	send_key_event(uinp_fd, ABS_Y, 2, EV_ABS);
+
+	return uinp_fd;
 }
 
 /* checks the state of the button and decides for a short or long button press */
@@ -153,26 +210,26 @@ void checkButton(int uinh) {
 				btnLastTime=time(NULL);
 				btnState = BTNSTATE_RELEASE;
 			} else if (buttonState==HIGH && btnPressCtr==1 && difftime(time(NULL),btnLastTime)>1) {
-				send_key_event(uinh, KEY_R,1);
+				send_key_event(uinh, KEY_R,1,EV_KEY);
 			}
 			break;
 		case BTNSTATE_RELEASE:
 		 	if (buttonState==LOW && difftime(time(NULL),btnLastTime)>1 ) {
 
 			 	if (btnPressCtr==1) {
-					send_key_event(uinh, KEY_R,0);
+					send_key_event(uinh, KEY_R,0,EV_KEY);
 			 	} else if (btnPressCtr==3) {
 					// Sending ESC
-					send_key_event(uinh, KEY_ESC,1);
+					send_key_event(uinh, KEY_ESC,1,EV_KEY);
 					usleep(50000);
-					send_key_event(uinh, KEY_ESC,0);
+					send_key_event(uinh, KEY_ESC,0,EV_KEY);
 				} else if ( btnPressCtr==5 ) {
 					// shutting down
 					pollButton = 0;
 			 		pollPads = 0;
-					send_key_event(uinh, KEY_F4,1);
+					send_key_event(uinh, KEY_F4,1,EV_KEY);
 					usleep(50000);
-					send_key_event(uinh, KEY_F4,0);
+					send_key_event(uinh, KEY_F4,0,EV_KEY);
 
 					system("shutdown -t 3 -h now");
 				}
@@ -191,11 +248,11 @@ void checkButton(int uinh) {
 }
 
 /* checks, if a button on the pad is pressed and sends an event according the button state. */
-void processPadBtn(uint16_t buttons, uint16_t mask, uint16_t key, int uinh) {
+void processPadBtn(uint16_t buttons, uint16_t evtype, uint16_t mask, uint16_t key, int uinh) {
 	if ( (buttons & mask) == mask ) {
-		send_key_event(uinh, key, 1);
+		send_key_event(uinh, key, 1, evtype);
 	} else {
-		send_key_event(uinh, key, 0);
+		send_key_event(uinh, key, 0, evtype);
 	}
 }
 
@@ -277,12 +334,21 @@ int main(int argc, char *argv[]) {
 	/* set GPIO pins as input or output pins */
 	initializePads( &pads );
 
-	/* intialize virtual input device */
-	if ((uinp_fd = setup_uinput_device()) < 0) {
-		printf("[SNESDev-Rpi] Unable to find uinput device\n");
+	/* intialize virtual input devices */
+	if ((uinp_kbd = setup_uinput_keyboard_device()) < 0) {
+		printf("[SNESDev-Rpi] Unable to create uinput keyboard device\n");
+		return -1;
+	}
+	if ((uinp_gp1 = setup_uinput_gamepad_device()) < 0) {
+		printf("[SNESDev-Rpi] Unable to create uinput gamepad device 1\n");
+		return -1;
+	}
+	if ((uinp_gp2 = setup_uinput_gamepad_device()) < 0) {
+		printf("[SNESDev-Rpi] Unable to create uinput gamepad device 2\n");
 		return -1;
 	}
 
+	/* Register signal handlers  */
 	if (signal(SIGINT, sig_handler) == SIG_ERR)	printf("\n[SNESDev-Rpi] Cannot catch SIGINT\n");
 	if (signal(SIGQUIT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGQUIT\n");
 	if (signal(SIGABRT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGABRT\n");
@@ -292,7 +358,7 @@ int main(int argc, char *argv[]) {
 
 		if (pollButton) {
 			/* Check state of button. */
-			checkButton(uinp_fd);
+			checkButton(uinp_kbd);
 		}
 
 		if (pollPads) {
@@ -301,32 +367,54 @@ int main(int argc, char *argv[]) {
 
 			/* send an event (pressed or released) for each button */
 			/* key events for first controller */
-	        processPadBtn(padButtons.buttons1, SNES_A,     KEY_X,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_B,     KEY_Z,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_X,     KEY_S,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_Y,     KEY_A,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_L,     KEY_Q,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_R,     KEY_W,          uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_SELECT,KEY_RIGHTSHIFT, uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_START, KEY_ENTER,      uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_LEFT,  KEY_LEFT,       uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_RIGHT, KEY_RIGHT,      uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_UP,    KEY_UP,         uinp_fd);
-	        processPadBtn(padButtons.buttons1, SNES_DOWN,  KEY_DOWN,       uinp_fd);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_A,     BTN_A,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_B,     BTN_B,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_X,     BTN_X,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_Y,     BTN_Y,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_L,     BTN_TL,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_R,     BTN_TR,          uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_SELECT,BTN_SELECT, uinp_gp1);
+	        processPadBtn(padButtons.buttons1, EV_KEY, SNES_START, BTN_START,      uinp_gp1);
+
+			if ( (padButtons.buttons1 & SNES_LEFT) == SNES_LEFT ) {
+				send_key_event(uinp_gp1, ABS_X, 0, EV_ABS);
+			} else if ( (padButtons.buttons1 & SNES_RIGHT) == SNES_RIGHT ) {
+				send_key_event(uinp_gp1, ABS_X, 4, EV_ABS);
+			} else {
+				send_key_event(uinp_gp1, ABS_X, 2, EV_ABS);
+			}	        
+			if ( (padButtons.buttons1 & SNES_UP) == SNES_UP ) {
+				send_key_event(uinp_gp1, ABS_Y, 0, EV_ABS);
+			} else if ( (padButtons.buttons1 & SNES_DOWN) == SNES_DOWN ) {
+				send_key_event(uinp_gp1, ABS_Y, 4, EV_ABS);
+			} else {
+				send_key_event(uinp_gp1, ABS_Y, 2, EV_ABS);
+			}	        
 
 			// key events for second controller 
-	        processPadBtn(padButtons.buttons2, SNES_A,     KEY_E, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_B,     KEY_R, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_X,     KEY_T, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_Y,     KEY_Y, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_L,     KEY_U, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_R,     KEY_I, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_SELECT,KEY_O, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_START, KEY_P, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_LEFT,  KEY_C, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_RIGHT, KEY_B, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_UP,    KEY_F, uinp_fd);
-	        processPadBtn(padButtons.buttons2, SNES_DOWN,  KEY_V, uinp_fd);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_A,     BTN_A, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_B,     BTN_B, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_X,     BTN_X, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_Y,     BTN_Y, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_L,     BTN_TL, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_R,     BTN_TR, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_SELECT,BTN_SELECT, uinp_gp2);
+	        processPadBtn(padButtons.buttons2, EV_KEY, SNES_START, BTN_START, uinp_gp2);
+
+			if ( (padButtons.buttons2 & SNES_LEFT) == SNES_LEFT ) {
+				send_key_event(uinp_gp2, ABS_X, 0, EV_ABS);
+			} else if ( (padButtons.buttons2 & SNES_RIGHT) == SNES_RIGHT ) {
+				send_key_event(uinp_gp2, ABS_X, 4, EV_ABS);
+			} else {
+				send_key_event(uinp_gp2, ABS_X, 2, EV_ABS);
+			}	        
+			if ( (padButtons.buttons2 & SNES_UP) == SNES_UP ) {
+				send_key_event(uinp_gp2, ABS_Y, 0, EV_ABS);
+			} else if ( (padButtons.buttons2 & SNES_DOWN) == SNES_DOWN ) {
+				send_key_event(uinp_gp2, ABS_Y, 4, EV_ABS);
+			} else {
+				send_key_event(uinp_gp2, ABS_Y, 2, EV_ABS);
+			}	        
 		}
 
 		/* wait for some time to keep the CPU load low */
