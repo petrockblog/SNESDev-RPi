@@ -1,7 +1,7 @@
 SNESDev-RPi
 ===========
 
-Simulates a virtual keyboard for two SNES controllers that are connected to the GPIO pins of the Raspberry Pi.
+Implements two SNES game controllers and a virtual keyboard for up to two SNES controllers and a button that are connected to the GPIO pins of the Raspberry Pi. 
 
 Installation
 ------------
