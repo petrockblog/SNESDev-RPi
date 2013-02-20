@@ -322,13 +322,13 @@ int main(int argc, char *argv[]) {
     {
 		pads.clock  = RPI_GPIO_P1_19;
 		pads.strobe = RPI_GPIO_P1_23;
-		pads.data1  = RPI_GPIO_P1_07;
-		pads.data2  = RPI_GPIO_P1_05;
+		pads.data1  = RPI_GPIO_P1_05;
+		pads.data2  = RPI_GPIO_P1_07;
     } else {
 		pads.clock  = RPI_V2_GPIO_P1_19;
 		pads.strobe = RPI_V2_GPIO_P1_23;
-		pads.data1  = RPI_V2_GPIO_P1_07;
-		pads.data2  = RPI_V2_GPIO_P1_05;
+		pads.data1  = RPI_V2_GPIO_P1_05;
+		pads.data2  = RPI_V2_GPIO_P1_07;
     }
 
 	/* set GPIO pins as input or output pins */
