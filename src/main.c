@@ -62,7 +62,7 @@ int buttonPin;
 
 /* Signal callback function */
 void sig_handler(int signo) {
-  if ((signo == SIGINT) | (signo == SIGKILL) | (signo == SIGQUIT) | (signo == SIGABRT)) {
+  if ((signo == SIGINT) | (signo == SIGQUIT) | (signo == SIGABRT) | (signo = SIGTERM)) {
   	printf("Releasing SNESDev-Rpi device(s).\n");
   	pollButton = 0;
   	pollPads = 0;
@@ -273,24 +273,20 @@ int main(int argc, char *argv[]) {
 		buttonPin = BUTTONPIN_V2;
     }
 
-
 	// check command line arguments
 	if (argc > 1) {
-		// argv[1]==1 poll controllers only
-		// argv[1]==2 poll button only
-		// argv[1]==3 poll controllers and button
 		switch ( atoi(argv[argc-1]) ) {
-			case 1:
+			case 1: // argv[1]==1 poll controllers only
 				printf("[SNESDev-Rpi] Polling only controllers.\n");
 				pollButton = 0;
 				pollPads = 1;
 			break;
-			case 2:
+			case 2: // argv[1]==2 poll button only
 				printf("[SNESDev-Rpi] Polling button only.\n");
 				pollButton = 1;
 				pollPads = 0;
 			break;
-			case 3:
+			case 3: // argv[1]==3 poll controllers and button
 				printf("[SNESDev-Rpi] Polling controllers and button.\n");
 				pollButton = 1;
 				pollPads = 1;
@@ -334,24 +330,29 @@ int main(int argc, char *argv[]) {
 	/* set GPIO pins as input or output pins */
 	initializePads( &pads );
 
-	/* intialize virtual input devices */
-	if ((uinp_kbd = setup_uinput_keyboard_device()) < 0) {
-		printf("[SNESDev-Rpi] Unable to create uinput keyboard device\n");
-		return -1;
+	if (pollButton) {
+		/* intialize virtual input devices */
+		if ((uinp_kbd = setup_uinput_keyboard_device()) < 0) {
+			printf("[SNESDev-Rpi] Unable to create uinput keyboard device\n");
+			return -1;
+		}
 	}
-	if ((uinp_gp1 = setup_uinput_gamepad_device()) < 0) {
-		printf("[SNESDev-Rpi] Unable to create uinput gamepad device 1\n");
-		return -1;
-	}
-	if ((uinp_gp2 = setup_uinput_gamepad_device()) < 0) {
-		printf("[SNESDev-Rpi] Unable to create uinput gamepad device 2\n");
-		return -1;
+	if (pollPads) {
+		if ((uinp_gp1 = setup_uinput_gamepad_device()) < 0) {
+			printf("[SNESDev-Rpi] Unable to create uinput gamepad device 1\n");
+			return -1;
+		}
+		if ((uinp_gp2 = setup_uinput_gamepad_device()) < 0) {
+			printf("[SNESDev-Rpi] Unable to create uinput gamepad device 2\n");
+			return -1;
+		}
 	}
 
 	/* Register signal handlers  */
 	if (signal(SIGINT, sig_handler) == SIG_ERR)	printf("\n[SNESDev-Rpi] Cannot catch SIGINT\n");
 	if (signal(SIGQUIT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGQUIT\n");
 	if (signal(SIGABRT, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGABRT\n");
+	if (signal(SIGTERM, sig_handler) == SIG_ERR) printf("\n[SNESDev-Rpi] Cannot catch SIGTERM\n");
 
 	/* enter the main loop */
 	while ( doRun ) {
