@@ -1,8 +1,7 @@
 /*
- * SNESDev - Simulates a virtual keyboard for two SNES controllers that are 
- * connected to the GPIO pins of the Raspberry Pi.
+ * SNESDev - User-space driver for the RetroPie GPIO Adapter for the Raspberry Pi.
  *
- * (c) Copyright 2012  Florian Müller (petrockblog@flo-mueller.com)
+ * (c) Copyright 2012-2013  Florian Müller (contact@petrockblock.com)
  *
  * SNESDev homepage: https://github.com/petrockblog/SNESDev-RPi
  *
@@ -26,22 +25,17 @@
  * Raspberry Pi is a trademark of the Raspberry Pi Foundation.
  */
 
-#ifndef button_h
-#define button_h
+#ifndef UINPUT_KBD_H_
+#define UINPUT_KBD_H_
 
-#include <inttypes.h>
-#include <bcm2835.h>
-#include <unistd.h>
-#include <stdio.h>
+#include "types.h"
 
-/* holds the GPIO pins for the clock, strobe and data signals */
 typedef struct {
-    int
-} button;
+	S16 fd;
+} UINP_KBD_DEV;
 
+S16 uinput_kbd_open   (UINP_KBD_DEV* const kbd);
+S16 uinput_kbd_close  (UINP_KBD_DEV* const kbd);
+S16 uinput_kbd_write  (UINP_KBD_DEV* const kbd, unsigned int keycode, int keyvalue, unsigned int evtype);
 
-/* check the state of each button of each controller */
-void updateButton();
-
-#endif
-
+#endif /* UINPUT_KBD_H_ */

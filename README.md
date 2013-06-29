@@ -1,10 +1,12 @@
 SNESDev-RPi
 ===========
 
-Implements two SNES game controllers and a virtual keyboard for up to two SNES controllers and a button that are connected to the GPIO pins of the Raspberry Pi. 
+SNESDev is a user-space driver for the RetroPie GPIO Adapter for the Raspberry Pi. It implements two (S)NES game controllers and a virtual keyboard for up to two (S)NES controllers and a button that are connected to the GPIO pins of the Raspberry Pivia the RetroPie GPIO Adapter (http://blog.petrockblock.com/2012/10/21/the-retropie-gpio-adapter/). 
 
 Installation
 ------------
+
+Manual installation:
 
 First of all, make sure that Git is installed:
 
@@ -40,6 +42,8 @@ cd SNESDev-RPi
 make clean
 make
 ```
+
+Alternatively, you can use the RetroPie Setup Script (https://github.com/petrockblog/RetroPie-Setup) for installing and configuring SNESDev.
 
 Running
 -------

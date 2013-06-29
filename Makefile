@@ -1,21 +1,25 @@
+# Generic Makefile for compiling a simple executable.
 CC=gcc
+SRCDIR=src
+BUILDDIR=build
 CFLAGS=-c -Wall -O3
 LIBS=-lbcm2835 -lrt
-INCLUDES=-Iinclude
-EXECUTABLE=SNESDev
+TARGET := SNESDev
+SRCEXT := c
+SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
+DEPS := $(OBJECTS:.o=.deps)
 
-SNESDev: obj/main.o obj/SNESpad.o obj/cpuinfo.o
-	$(CC) obj/main.o obj/SNESpad.o obj/cpuinfo.o $(LIBS) -o bin/$(EXECUTABLE)
+$(TARGET): $(OBJECTS)
+	@echo " Linking..."; $(CC) $^ $(LIBS) -o $(TARGET)
 
-obj/main.o: src/main.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) src/main.c -o obj/main.o
-
-obj/SNESpad.o: src/SNESpad.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) src/SNESpad.c -o obj/SNESpad.o
-
-obj/cpuinfo.o: src/cpuinfo.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) src/cpuinfo.c -o obj/cpuinfo.o
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@mkdir -p $(BUILDDIR)
+	@echo " CC $<"; $(CC) $(CFLAGS) -MD -MF $(@:.o=.deps) -c -o $@ $<
 
 clean:
-	rm obj/*.o; rm bin/$(EXECUTABLE)
+	@echo " Cleaning..."; $(RM) -r $(BUILDDIR) $(TARGET)
 
+-include $(DEPS)
+
+.PHONY: clean
