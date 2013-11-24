@@ -15,33 +15,17 @@ sudo apt-get update
 sudo apt-get install -y git
 ```
 
-SNESDev needs the BCM 2835 library installed. It is downloaded and installed with
-
-```shell
-echo "Installing BCM2835 library"
-cd
-wget http://www.open.com.au/mikem/bcm2835/bcm2835-1.14.tar.gz
-tar -zxvf bcm2835-1.14.tar.gz
-cd bcm2835-1.14
-./configure
-make clean
-make
-sudo make install
-cd
-rm bcm2835-1.14.tar.gz
-```
 
 SNESDev is downloaded and installed with
 
 ```shell
-# install SNESDev
 cd
 git clone git://github.com/petrockblog/SNESDev-RPi.git
 cd SNESDev-RPi
-# make sure that old stuff is removed before compilation and linking
-make clean
-make
+./build.sh
 ```
+
+The lines above build two needed libraries and SNESDev-Rpi.
 
 Alternatively, you can use the RetroPie Setup Script (https://github.com/petrockblog/RetroPie-Setup) for installing and configuring SNESDev.
 
@@ -71,16 +55,10 @@ sudo ~/SNESDev-RPi/bin/SNESDev &
 
 In order to access the uinput device SNESDev has to be run as root. This is (obviously) not so nice and is currently an issue. If you have a solution or suggestion for that, feel free to submit a pull request or send me a mail!
 
-Running SNESDev with Arguments
-------------------------------
+Configuring SNESDev-Rpi
+-----------------------
 
-SNESDev can be started with an argument that enables the polling of only the button, only the game pads, or both:
-
-```shell
-SNESDev 1 poll controllers only
-SNESDev 2 poll button only
-SNESDev 3 poll controllers and button (DEFAULT)
-```
+SNESDev-Rpi is configured with the help of the configuration file ```/etc/snesdev.cfg```. It is a lightweighted configuration file and well commented.
 
 
 Running SNESDev as a service
