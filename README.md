@@ -22,10 +22,10 @@ SNESDev is downloaded and installed with
 cd
 git clone git://github.com/petrockblog/SNESDev-RPi.git
 cd SNESDev-RPi
-./build.sh
+sudo ./build.sh
 ```
 
-The lines above build two needed libraries and SNESDev-Rpi.
+The lines above build and install two needed libraries and SNESDev-Rpi. The sudo-command is needed for the installation of the two libraries.
 
 Alternatively, you can use the RetroPie Setup Script (https://github.com/petrockblog/RetroPie-Setup) for installing and configuring SNESDev.
 

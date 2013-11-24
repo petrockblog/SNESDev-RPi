@@ -32,7 +32,7 @@ scriptdir=`cd $scriptdir && pwd`
 # build BCM 2835 library for config file management
 echo -e "\n= = = = = = = = = =\nBuilding BCM 2835 library\n= = = = = = = = = =\n"
 pushd "$scriptdir/libs/bcm2835-1.14/"
-./configure --prefix="$scriptdir/libs/bcm2835-1.14/installdir/"
+./configure
 make
 make install
 popd
@@ -40,11 +40,11 @@ popd
 # build Confuse library for config file management
 echo -e "\n= = = = = = = = = =\nBuilding Confuse library\n= = = = = = = = = =\n"
 pushd "$scriptdir/libs/confuse-2.7/"
-./configure --prefix="$scriptdir/libs/confuse-2.7/installdir/"
+./configure
 make
 make install
 popd
 
 # build SNESDev-Rpi
 echo -e "\n= = = = = = = = = =\nBuilding SNESDev-Rpi\n= = = = = = = = = =\n"
-LIBCONFUSE_DIR="$scriptdir/libs/confuse-2.7/installdir" LIBBCM2835_DIR="$scriptdir/libs/bcm2835-1.14/installdir" make 
+make 
