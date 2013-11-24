@@ -32,7 +32,7 @@
 #include "btn.h"
 #include "GPIO.h"
 
-S16 btn_open(BTN_DEV_ST * btn) {
+int16_t btn_open(BTN_DEV_ST * btn) {
 	btn->duration = 0;
 	btn->lastPress = 0;
 	btn->pressedCtr = 0;
@@ -40,13 +40,9 @@ S16 btn_open(BTN_DEV_ST * btn) {
 	return gpio_open(btn->port, btn->pin, GPIO_INPUT);
 }
 
-S16 btn_close(S16 port, S16 pin) {
-	return gpio_close(port, pin);
-}
-
 void btn_read(BTN_DEV_ST* const btn) {
 	// read the state of the button into a local variable
-	U8 buttonState = gpio_read_pin(btn->port, btn->pin);
+	uint8_t buttonState = gpio_read_pin(btn->port, btn->pin);
 
 	// three-state machine:
 	// - press and hold: send "r" key (for rewind function of RetroArch)
@@ -87,6 +83,6 @@ void btn_read(BTN_DEV_ST* const btn) {
 	}
 }
 
-S16 btn_ioctlr() {
+int16_t btn_ioctlr() {
 	return -1;
 }

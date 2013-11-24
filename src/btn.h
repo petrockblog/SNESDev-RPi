@@ -28,24 +28,23 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#include "types.h"
+#include <stdint.h>
 
 typedef enum {
 	BTN_STATE_IDLE = 0, BTN_STATE_RELEASED = 1, BTN_STATE_PRESSED = 2
 } BTN_STATE_E;
 
 typedef struct {
-	S16 port;
-	S16 pin;
+	int16_t port;
+	int16_t pin;
 	BTN_STATE_E state;
-	U32 duration;
-	U16 pressedCtr;
-	U32 lastPress;
+	uint32_t duration;
+	uint16_t pressedCtr;
+	uint32_t lastPress;
 } BTN_DEV_ST;
 
-S16 btn_open(BTN_DEV_ST* btn);
-S16 btn_close(S16 port, S16 pin);
+int16_t btn_open(BTN_DEV_ST* btn);
 void btn_read(BTN_DEV_ST* const btn);
-S16 btn_ioctlr();
+int16_t btn_ioctlr();
 
 #endif /* BUTTON_H_ */

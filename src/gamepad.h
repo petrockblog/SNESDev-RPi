@@ -28,8 +28,6 @@
 #ifndef GAMEPAD_H_
 #define GAMEPAD_H_
 
-#include "types.h"
-
 /* bit masks for checking the button states for SNES controllers */
 #define GPAD_SNES_B       0x01
 #define GPAD_SNES_Y       0x02
@@ -61,16 +59,16 @@ typedef enum {
 /* holds the GPIO pins for the clock, strobe and data signals */
 typedef struct {
 	GPAD_TYPE type;
-	S16 port;
-	S16 pin_clock;
-	S16 pin_strobe;
-	S16 pin_data;
-	U16 state;
+	int16_t port;
+	int16_t pin_clock;
+	int16_t pin_strobe;
+	int16_t pin_data;
+	uint16_t state;
 } GPAD_ST;
 
-S16 gpad_open(GPAD_ST* const gpad);
-S16 gpad_close();
-S16 gpad_ioctrl();
-S16 gpad_read(GPAD_ST* const gpad);
+int16_t gpad_open(GPAD_ST* const gpad);
+int16_t gpad_close();
+int16_t gpad_ioctrl();
+int16_t gpad_read(GPAD_ST* const gpad);
 
 #endif /* GAMEPAD_H_ */

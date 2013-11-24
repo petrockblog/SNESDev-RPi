@@ -28,8 +28,6 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-#include "types.h"
-
 typedef enum {
 	GPIO_SETDIR = 0,
 	GPIO_TOOGLE = 1
@@ -45,12 +43,8 @@ typedef enum {
 	GPIO_HIGH = 1
 } GPIO_VALUE;
 
-S16          gpio_open       (S16 port, S16 pin, GPIO_DIR direction);
-S16          gpio_close      (S16 port, S16 pin);
-GPIOWIDTH_T  gpio_read       (S16 port);
-U8           gpio_read_pin   (S16 port, S16 pin);
-S16          gpio_write      (S16 port, GPIOWIDTH_T val);
-GPIOWIDTH_T  gpio_write_pin  (S16 port, S16 pin, GPIO_VALUE val);
-S16          gpio_ioctrl     (GPIO_IOCTRL_CMD cmd, S32 params);
+int16_t          gpio_open       (int16_t port, int16_t pin, GPIO_DIR direction);
+uint8_t          gpio_read_pin   (int16_t port, int16_t pin);
+int16_t          gpio_write_pin  (int16_t port, int16_t pin, GPIO_VALUE val);
 
 #endif /* GPIO_H_ */

@@ -36,7 +36,7 @@
 
 
 /* Setup the uinput keyboard device */
-S16 uinput_kbd_open(UINP_KBD_DEV* const kbd)
+int16_t uinput_kbd_open(UINP_KBD_DEV* const kbd)
 {
 	kbd->fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
 	if (kbd->fd == 0) {
@@ -71,14 +71,14 @@ S16 uinput_kbd_open(UINP_KBD_DEV* const kbd)
 	return kbd->fd;
 }
 
-S16 uinput_kbd_close  (UINP_KBD_DEV* const kbd)
+int16_t uinput_kbd_close  (UINP_KBD_DEV* const kbd)
 {
 	ioctl(kbd->fd, UI_DEV_DESTROY);
 	return close(kbd->fd);
 }
 
 /* sends a key event to the virtual device */
-S16 uinput_kbd_write(UINP_KBD_DEV* const kbd, unsigned int keycode, int keyvalue, unsigned int evtype)
+int16_t uinput_kbd_write(UINP_KBD_DEV* const kbd, unsigned int keycode, int keyvalue, unsigned int evtype)
 {
 	struct input_event event;
 	gettimeofday(&event.time, NULL);

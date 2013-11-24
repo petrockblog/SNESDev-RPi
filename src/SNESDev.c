@@ -34,15 +34,19 @@
 #include <bcm2835.h>
 #include <signal.h>
 #include <time.h>
+#include <stddef.h>
+#include <stdint.h>
+
+ #include "confuse.h"
 
 #include "signal.h"
-#include "types.h"
 #include "btn.h"
 #include "gamepad.h"
 #include "uinput_kbd.h"
 #include "uinput_gamepad.h"
 #include "cpuinfo.h"
 
+#define CFGFILENAME "/etc/snesdev.cfg"
 #define BUTTONPIN     RPI_GPIO_P1_11
 #define BUTTONPIN_V2  RPI_V2_GPIO_P1_11
 
@@ -51,13 +55,25 @@
 #define FRAMEWAIT 20
 #define FRAMEWAITLONG 100
 
-S16 doRun, pollButton, pollPads;
+int16_t doRun, pollButton, pollPads;
 UINP_KBD_DEV uinp_kbd;
 UINP_GPAD_DEV uinp_gpads[GPADSNUM];
 
+/* structure for the configuration parameters */
+typedef struct {
+	cfg_bool_t button_enabled;
+	cfg_bool_t gamepad1_enabled;
+	char *gamepad1_type;
+	cfg_bool_t gamepad2_enabled;
+	char *gamepad2_type;
+} configuration_st;
+
+cfg_t *cfg;
+configuration_st confres;
+
 /* Signal callback function */
-void sig_handler(S16 signo) {
-	S16 ctr = 0;
+void sig_handler(int signo) {
+	int16_t ctr = 0;
 
 	if ((signo == SIGINT) | (signo == SIGQUIT) | (signo == SIGABRT) | (signo =
 			SIGTERM)) {
@@ -68,6 +84,10 @@ void sig_handler(S16 signo) {
 		for (ctr = 0; ctr < GPADSNUM; ctr++) {
 			uinput_gpad_close(&uinp_gpads[ctr]);
 		}
+	    cfg_free(cfg);
+	    free(confres.gamepad1_type);
+	    free(confres.gamepad2_type);
+
 		doRun = 0;
 	}
 }
@@ -85,7 +105,7 @@ void register_signalhandlers() {
 }
 
 /* checks, if a button on the pad is pressed and sends an event according the button state. */
-inline void processPadBtn(U16 buttons, U16 evtype, U16 mask, U16 key,
+inline void processPadBtn(uint16_t buttons, uint16_t evtype, uint16_t mask, uint16_t key,
 		UINP_GPAD_DEV* uinp_gpad) {
 	if ((buttons & mask) == mask) {
 		uinput_gpad_write(uinp_gpad, key, 1, evtype);
@@ -94,82 +114,98 @@ inline void processPadBtn(U16 buttons, U16 evtype, U16 mask, U16 key,
 	}
 }
 
-void checkCommandLineArguments(S16 argc, char *argv[]) {
-	if (argc > 1) {
-		switch (atoi(argv[argc - 1])) {
-		case 1: // argv[1]==1 poll controllers only
-			printf("[SNESDev-Rpi] Polling only controllers.\n");
-			pollButton = 0;
-			pollPads = 1;
-			break;
-		case 2: // argv[1]==2 poll button only
-			printf("[SNESDev-Rpi] Polling button only.\n");
-			pollButton = 1;
-			pollPads = 0;
-			break;
-		case 3: // argv[1]==3 poll controllers and button
-			printf("[SNESDev-Rpi] Polling controllers and button.\n");
-			pollButton = 1;
-			pollPads = 1;
-			break;
-		}
-	} else {
-		printf("[SNESDev-Rpi] Polling controllers and button.\n");
-	}
+// void checkCommandLineArguments(int16_t argc, char *argv[]) {
+int readConfigurationfile() {
+    cfg_opt_t opts[] = {
+        CFG_SIMPLE_INT("button_enabled", &confres.button_enabled),
+        CFG_SIMPLE_INT("gamepad1_enabled", &confres.gamepad1_enabled),
+        CFG_SIMPLE_STR("gamepad1_type", &confres.gamepad1_type),
+        CFG_SIMPLE_INT("gamepad2_enabled", &confres.gamepad2_enabled),
+        CFG_SIMPLE_STR("gamepad2_type", &confres.gamepad2_type),
+        CFG_END()
+    };
+    cfg = cfg_init(opts, 0);
+    if ( access(CFGFILENAME, F_OK) == -1 ) {
+    	printf("[SNESDev-Rpi] Error: Cannot find /etc/snesdev.cfg\n");
+		return 1;
+    }
+    if (cfg_parse(cfg, CFGFILENAME) == CFG_PARSE_ERROR) {
+    	printf("[SNESDev-Rpi] Error: Cannot parse /etc/snesdev.cfg\n");
+		return 1;
+    }
+    return 0;
 }
 
-S16 main(S16 argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 
-	U8 ctr = 0;
+	uint8_t ctr = 0;
 	GPAD_ST gpads[GPADSNUM];
 	BTN_DEV_ST button;
-
-	pollButton = 1;
-	pollPads = 1;
-	doRun = 1;
 	
 	if (!bcm2835_init())
 		return 1;
 	
-	checkCommandLineArguments(argc, argv);
+	if (readConfigurationfile() != 0 ) {
+		return 1;
+	}
 
-	if (pollPads) {
+	if (confres.gamepad1_enabled || confres.gamepad2_enabled) {
 
+		gpads[0].port = 1;
+		gpads[1].port = 1;
 		// check board revision and set pins to be used
 		// these are acutally also used by the gamecon driver
 		if (get_rpi_revision()==1)
 		{
-			gpads[0].port = 1;
 			gpads[0].pin_clock = RPI_GPIO_P1_19;
 			gpads[0].pin_strobe = RPI_GPIO_P1_23;
 			gpads[0].pin_data = RPI_GPIO_P1_05;
-			gpads[0].type = GPAD_TYPE_SNES;
-			gpads[1].port = 1;
 			gpads[1].pin_clock = RPI_GPIO_P1_19;
 			gpads[1].pin_strobe = RPI_GPIO_P1_23;
 			gpads[1].pin_data = RPI_GPIO_P1_07;		
-			gpads[1].type = GPAD_TYPE_SNES;
 		} else {
-			gpads[0].port = 1;
 			gpads[0].pin_clock = RPI_V2_GPIO_P1_19;
 			gpads[0].pin_strobe = RPI_V2_GPIO_P1_23;
 			gpads[0].pin_data = RPI_V2_GPIO_P1_05;
 			gpads[0].type = GPAD_TYPE_SNES;
-			gpads[1].port = 1;
 			gpads[1].pin_clock = RPI_V2_GPIO_P1_19;
 			gpads[1].pin_strobe = RPI_V2_GPIO_P1_23;
 			gpads[1].pin_data = RPI_V2_GPIO_P1_07;		
+		}
+		if (strcmp(confres.gamepad1_type,"nes")==0) {
+			gpads[0].type = GPAD_TYPE_NES;
+		} else {
+			gpads[0].type = GPAD_TYPE_SNES;
+		}
+		if (strcmp(confres.gamepad2_type,"nes")==0) {
+			gpads[1].type = GPAD_TYPE_NES;
+		} else {
 			gpads[1].type = GPAD_TYPE_SNES;
 		}
 
-		for (ctr = 0; ctr < GPADSNUM; ctr++) {
-			gpad_open(&gpads[ctr]);
+		if (confres.gamepad1_enabled) {
+			printf("[SNESDev-Rpi] Enabling game pad 1 with type '%s'.\n", confres.gamepad1_type);
+			gpad_open(&gpads[0]);
 			switch (gpads->type) {
 			case GPAD_TYPE_SNES:
-				uinput_gpad_open(&uinp_gpads[ctr], UINPUT_GPAD_TYPE_SNES);
+				uinput_gpad_open(&uinp_gpads[0], UINPUT_GPAD_TYPE_SNES);
 				break;
 			case GPAD_TYPE_NES:
-				uinput_gpad_open(&uinp_gpads[ctr], UINPUT_GPAD_TYPE_NES);
+				uinput_gpad_open(&uinp_gpads[0], UINPUT_GPAD_TYPE_NES);
+				break;
+			default:
+				break;
+			}
+		}
+		if (confres.gamepad2_enabled) {
+			printf("[SNESDev-Rpi] Enabling game pad 2 with type '%s'.\n", confres.gamepad2_type);
+			gpad_open(&gpads[1]);
+			switch (gpads->type) {
+			case GPAD_TYPE_SNES:
+				uinput_gpad_open(&uinp_gpads[1], UINPUT_GPAD_TYPE_SNES);
+				break;
+			case GPAD_TYPE_NES:
+				uinput_gpad_open(&uinp_gpads[1], UINPUT_GPAD_TYPE_NES);
 				break;
 			default:
 				break;
@@ -177,7 +213,8 @@ S16 main(S16 argc, char *argv[]) {
 		}
 	}
 
-	if (pollButton) {
+	if (confres.button_enabled) {
+		printf("[SNESDev-Rpi] Enabling button.\n");
 		button.port = 1;
 		if (get_rpi_revision()==1) {
 			button.pin = BUTTONPIN;
@@ -191,8 +228,9 @@ S16 main(S16 argc, char *argv[]) {
 	register_signalhandlers();
 
 	///* enter the main loop */
+	doRun = 1;
 	while (doRun) {
-		if (pollPads) {						
+		if (confres.gamepad1_enabled || confres.gamepad2_enabled) {						
 			/* read states of the buttons */
 			for (ctr = 0; ctr < GPADSNUM; ctr++) {
 				gpad_read(&gpads[ctr]);
@@ -200,6 +238,12 @@ S16 main(S16 argc, char *argv[]) {
 
 			///* send an event (pressed or released) for each button */
 			for (ctr = 0; ctr < GPADSNUM; ctr++) {
+				if ((ctr==0 && !(confres.gamepad1_enabled)) || 
+					(ctr==1 && !(confres.gamepad2_enabled))) {
+					continue;
+				}
+
+				gpad_read(&gpads[ctr]);
 				processPadBtn(gpads[ctr].state, EV_KEY, GPAD_SNES_A, BTN_A,
 						&uinp_gpads[ctr]);
 				processPadBtn(gpads[ctr].state, EV_KEY, GPAD_SNES_B, BTN_B,
@@ -234,7 +278,7 @@ S16 main(S16 argc, char *argv[]) {
 			}
 		}
 
-		if (pollButton) {
+		if (confres.button_enabled) {
 			btn_read(&button);
 
 			switch (button.state) {
@@ -265,7 +309,7 @@ S16 main(S16 argc, char *argv[]) {
 		}
 
 		/* wait for some time to keep the CPU load low */
-		if (pollButton && !pollPads) {
+		if (confres.button_enabled && !(confres.gamepad1_enabled || confres.gamepad2_enabled)) {
 			delay(FRAMEWAITLONG);
 		} else {
 			delay(FRAMEWAIT);

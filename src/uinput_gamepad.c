@@ -57,8 +57,8 @@ static void send_key_event(int fd, unsigned int keycode, int keyvalue, unsigned 
 }
 
 /* Setup the uinput device */
-S16 uinput_gpad_open(UINP_GPAD_DEV* const gpad, UINPUT_GPAD_TYPE_E type) {
-	S16 uinp_fd;
+int16_t uinput_gpad_open(UINP_GPAD_DEV* const gpad, UINPUT_GPAD_TYPE_E type) {
+	int16_t uinp_fd;
 	gpad->fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
 	if (gpad->fd == 0) {
 		printf("Unable to open /dev/uinput\n");
@@ -108,13 +108,13 @@ S16 uinput_gpad_open(UINP_GPAD_DEV* const gpad, UINPUT_GPAD_TYPE_E type) {
 	return uinp_fd;
 }
 
-S16 uinput_gpad_close(UINP_GPAD_DEV* const gpad) {
+int16_t uinput_gpad_close(UINP_GPAD_DEV* const gpad) {
 	ioctl(gpad->fd, UI_DEV_DESTROY);
 	return close(gpad->fd);
 }
 
 /* sends a key event to the virtual device */
-S16 uinput_gpad_write(UINP_GPAD_DEV* const gpad, U16 keycode, S16 keyvalue, U16 evtype) {
+int16_t uinput_gpad_write(UINP_GPAD_DEV* const gpad, uint16_t keycode, int16_t keyvalue, uint16_t evtype) {
 	struct input_event event;
 	gettimeofday(&event.time, NULL);
 

@@ -28,7 +28,7 @@
 #ifndef UINPUT_GAMEPAD_H_
 #define UINPUT_GAMEPAD_H_
 
-#include "types.h"
+ #include <stdint.h>
 
 typedef enum {
 	UINPUT_GPAD_TYPE_NES  = 0,
@@ -36,12 +36,12 @@ typedef enum {
 } UINPUT_GPAD_TYPE_E;
 
 typedef struct  {
-	S16 fd;
-	S16 state;
+	int16_t fd;
+	int16_t state;
 } UINP_GPAD_DEV;
 
-S16 uinput_gpad_open   (UINP_GPAD_DEV* const gpad, UINPUT_GPAD_TYPE_E type);
-S16 uinput_gpad_close  (UINP_GPAD_DEV* const gpad);
-S16 uinput_gpad_write  (UINP_GPAD_DEV* const gpad, U16 keycode, S16 keyvalue, U16 evtype);
+int16_t uinput_gpad_open   (UINP_GPAD_DEV* const gpad, UINPUT_GPAD_TYPE_E type);
+int16_t uinput_gpad_close  (UINP_GPAD_DEV* const gpad);
+int16_t uinput_gpad_write  (UINP_GPAD_DEV* const gpad, uint16_t keycode, int16_t keyvalue, uint16_t evtype);
 
 #endif /* UINPUT_GAMEPAD_H_ */

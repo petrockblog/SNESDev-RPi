@@ -28,14 +28,14 @@
 #ifndef UINPUT_KBD_H_
 #define UINPUT_KBD_H_
 
-#include "types.h"
+ #include <stdint.h>
 
 typedef struct {
-	S16 fd;
+	int16_t fd;
 } UINP_KBD_DEV;
 
-S16 uinput_kbd_open   (UINP_KBD_DEV* const kbd);
-S16 uinput_kbd_close  (UINP_KBD_DEV* const kbd);
-S16 uinput_kbd_write  (UINP_KBD_DEV* const kbd, unsigned int keycode, int keyvalue, unsigned int evtype);
+int16_t uinput_kbd_open   (UINP_KBD_DEV* const kbd);
+int16_t uinput_kbd_close  (UINP_KBD_DEV* const kbd);
+int16_t uinput_kbd_write  (UINP_KBD_DEV* const kbd, unsigned int keycode, int keyvalue, unsigned int evtype);
 
 #endif /* UINPUT_KBD_H_ */

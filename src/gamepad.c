@@ -32,7 +32,7 @@
 #include "gamepad.h"
 #include "GPIO.h"
 
-S16 gpad_open(GPAD_ST* const gpad) {
+int16_t gpad_open(GPAD_ST* const gpad) {
 	gpad->state = 0;
 
 	gpio_open(gpad->port, gpad->pin_strobe, GPIO_OUTPUT);
@@ -45,16 +45,16 @@ S16 gpad_open(GPAD_ST* const gpad) {
 	return 0;
 }
 
-S16 gpad_close() {
+int16_t gpad_close() {
 	return -1;
 }
 
-S16 gpad_ioctrl() {
+int16_t gpad_ioctrl() {
 	return -1;
 }
 
-S16 gpad_read(GPAD_ST* const gpad) {
-	S16 i;
+int16_t gpad_read(GPAD_ST* const gpad) {
+	int16_t i;
 
 	gpio_write_pin(gpad->port, gpad->pin_strobe, GPIO_HIGH);
 	delayMicroseconds(2);
@@ -66,7 +66,7 @@ S16 gpad_read(GPAD_ST* const gpad) {
 		case GPAD_TYPE_SNES:
 			for (i = 0; i < 16; i++) {
 
-				U8 curpin1 = gpio_read_pin(gpad->port, gpad->pin_data);
+				uint8_t curpin1 = gpio_read_pin(gpad->port, gpad->pin_data);
 				gpio_write_pin(gpad->port, gpad->pin_clock, GPIO_HIGH);
 				delayMicroseconds(2);
 				gpio_write_pin(gpad->port, gpad->pin_clock, GPIO_LOW);
@@ -85,7 +85,7 @@ S16 gpad_read(GPAD_ST* const gpad) {
 	case GPAD_TYPE_NES:
 			for (i = 0; i < 8; i++) {
 
-				U8 curpin1 = gpio_read_pin(gpad->port, gpad->pin_data);
+				uint8_t curpin1 = gpio_read_pin(gpad->port, gpad->pin_data);
 				gpio_write_pin(gpad->port, gpad->pin_clock, GPIO_HIGH);
 				delayMicroseconds(2);
 				gpio_write_pin(gpad->port, gpad->pin_clock, GPIO_LOW);

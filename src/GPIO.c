@@ -31,7 +31,7 @@
 
 #include "GPIO.h"
 
-S16 gpio_open(S16 port, S16 pin, GPIO_DIR direction)
+int16_t gpio_open(int16_t port, int16_t pin, GPIO_DIR direction)
 {
 	if (direction==GPIO_OUTPUT) {
 		bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
@@ -43,19 +43,9 @@ S16 gpio_open(S16 port, S16 pin, GPIO_DIR direction)
 	return 0;
 }
 
-S16 gpio_close  (S16 port, S16 pin)
+uint8_t gpio_read_pin (int16_t port, int16_t pin)
 {
-	return -1;
-}
-
-GPIOWIDTH_T gpio_read   (S16 port)
-{
-	return -1;
-}
-
-U8 gpio_read_pin (S16 port, S16 pin)
-{
-	U8 val = bcm2835_gpio_lev(pin);
+	uint8_t val = bcm2835_gpio_lev(pin);
 	if (val==HIGH) {
 		return GPIO_HIGH;
 	} else if (val==LOW) {
@@ -65,12 +55,7 @@ U8 gpio_read_pin (S16 port, S16 pin)
 	}
 }
 
-S16 gpio_write  (S16 port, GPIOWIDTH_T val)
-{
-	return -1;
-}
-
-GPIOWIDTH_T gpio_write_pin  (S16 port, S16 pin, GPIO_VALUE val)
+int16_t gpio_write_pin  (int16_t port, int16_t pin, GPIO_VALUE val)
 {
 	if (val==GPIO_HIGH) {
 		bcm2835_gpio_write( pin, HIGH );
@@ -79,10 +64,5 @@ GPIOWIDTH_T gpio_write_pin  (S16 port, S16 pin, GPIO_VALUE val)
 	} else {
 		return -1;
 	}
-	return 0;
-}
-
-S16 gpio_ioctrl (GPIO_IOCTRL_CMD cmd, S32 params)
-{
 	return 0;
 }
