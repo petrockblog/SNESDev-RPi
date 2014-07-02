@@ -291,7 +291,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case BTN_STATE_RELEASED:
 					if (button.pressedCtr == 1 && button.duration >= 1) {
-						uinput_kbd_write(&uinp_kbd, KEY_R, 0, EV_KEY);
+						uinput_kbd_write(&uinp_kbd, KEY_ESC, 0, EV_KEY);
 					} else if (button.pressedCtr == 3 && button.duration >= 1) {
 						// Sending ESC
 						uinput_kbd_write(&uinp_kbd, KEY_ESC, 1, EV_KEY);
