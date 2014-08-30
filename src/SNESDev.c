@@ -46,32 +46,6 @@
 #include "uinput_gamepad.h"
 #include "cpuinfo.h"
 
-#ifdef ADAPTERVER1X
-
-	#define CLOCKPIN RPI_GPIO_P1_19
-	#define CLOCKPIN_V2 RPI_V2_GPIO_P1_19
-	#define STROBEPIN RPI_GPIO_P1_23
-	#define STROBEPIN_V2 RPI_V2_GPIO_P1_23
-	#define DATA1PIN RPI_GPIO_P1_05
-	#define DATA1PIN_V2 RPI_V2_GPIO_P1_05
-	#define DATA2PIN RPI_GPIO_P1_07
-	#define DATA2PIN_V2 RPI_V2_GPIO_P1_07
- 	#define ADAPTERVERSION "V1.X"
-
-#else
-
-	#define CLOCKPIN RPI_GPIO_P1_16
-	#define CLOCKPIN_V2 RPI_V2_GPIO_P1_16
-	#define STROBEPIN RPI_GPIO_P1_18
-	#define STROBEPIN_V2 RPI_V2_GPIO_P1_18
-	#define DATA1PIN RPI_GPIO_P1_15
-	#define DATA1PIN_V2 RPI_V2_GPIO_P1_15
-	#define DATA2PIN RPI_GPIO_P1_13
-	#define DATA2PIN_V2 RPI_V2_GPIO_P1_13
- 	#define ADAPTERVERSION "V2.X"
-
-#endif
-
 #define CFGFILENAME "/etc/snesdev.cfg"
 #define BUTTONPIN     RPI_GPIO_P1_11
 #define BUTTONPIN_V2  RPI_V2_GPIO_P1_11
@@ -92,6 +66,7 @@ typedef struct {
 	char *gamepad1_type;
 	cfg_bool_t gamepad2_enabled;
 	char *gamepad2_type;
+	char *adapter_version;
 } configuration_st;
 
 cfg_t *cfg;
@@ -147,6 +122,7 @@ int readConfigurationfile() {
         CFG_SIMPLE_STR("gamepad1_type", &confres.gamepad1_type),
         CFG_SIMPLE_INT("gamepad2_enabled", &confres.gamepad2_enabled),
         CFG_SIMPLE_STR("gamepad2_type", &confres.gamepad2_type),
+        CFG_SIMPLE_STR("adapter_version", &confres.adapter_version),
         CFG_END()
     };
     cfg = cfg_init(opts, 0);
@@ -166,7 +142,15 @@ int main(int argc, char *argv[]) {
 	uint8_t ctr = 0;
 	GPAD_ST gpads[GPADSNUM];
 	BTN_DEV_ST button;
-	
+	int16_t clockpin;
+	int16_t strobepin;
+	int16_t data1pin;
+	int16_t data2pin;
+	int16_t clockpin_v2;
+	int16_t strobepin_v2;
+	int16_t data1pin_v2;
+	int16_t data2pin_v2;
+
 	if (!bcm2835_init())
 		return 1;
 	
@@ -174,7 +158,40 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter %s\n",ADAPTERVERSION );
+	if (strcmp(confres.adapter_version,"1x")==0) {
+		clockpin = RPI_GPIO_P1_19;
+		strobepin = RPI_GPIO_P1_23;
+		data1pin = RPI_GPIO_P1_05;
+		data2pin = RPI_GPIO_P1_07;
+		clockpin_v2 = RPI_V2_GPIO_P1_19;
+		strobepin_v2 = RPI_V2_GPIO_P1_23;
+		data1pin_v2 = RPI_V2_GPIO_P1_05;
+		data2pin_v2 = RPI_V2_GPIO_P1_07;
+		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 1.X\n");
+
+	} else if (strcmp(confres.adapter_version,"2x")==0) {
+		clockpin = RPI_GPIO_P1_16;
+		strobepin = RPI_GPIO_P1_18;
+		data1pin = RPI_GPIO_P1_15;
+		data2pin = RPI_GPIO_P1_13;
+		clockpin_v2 = RPI_V2_GPIO_P1_16;
+		strobepin_v2 = RPI_V2_GPIO_P1_18;
+		data1pin_v2 = RPI_V2_GPIO_P1_15;
+		data2pin_v2 = RPI_V2_GPIO_P1_13;
+		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 2.X\n");
+
+	} else {
+		clockpin = RPI_GPIO_P1_16;
+		strobepin = RPI_GPIO_P1_18;
+		data1pin = RPI_GPIO_P1_15;
+		data2pin = RPI_GPIO_P1_13;
+		clockpin_v2 = RPI_V2_GPIO_P1_16;
+		strobepin_v2 = RPI_V2_GPIO_P1_18;
+		data1pin_v2 = RPI_V2_GPIO_P1_15;
+		data2pin_v2 = RPI_V2_GPIO_P1_13;
+		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 2.X\n");
+	}
+
 
 	if (confres.gamepad1_enabled || confres.gamepad2_enabled) {
 
@@ -184,19 +201,19 @@ int main(int argc, char *argv[]) {
 		// these are acutally also used by the gamecon driver
 		if (get_rpi_revision()==1)
 		{
-			gpads[0].pin_clock = CLOCKPIN;
-			gpads[0].pin_strobe = STROBEPIN;
-			gpads[0].pin_data = DATA1PIN;
-			gpads[1].pin_clock = CLOCKPIN;
-			gpads[1].pin_strobe = STROBEPIN;
-			gpads[1].pin_data = DATA2PIN;		
+			gpads[0].pin_clock = clockpin;
+			gpads[0].pin_strobe = strobepin;
+			gpads[0].pin_data = data1pin;
+			gpads[1].pin_clock = clockpin;
+			gpads[1].pin_strobe = strobepin;
+			gpads[1].pin_data = data2pin;		
 		} else {
-			gpads[0].pin_clock = CLOCKPIN_V2;
-			gpads[0].pin_strobe = STROBEPIN_V2;
-			gpads[0].pin_data = DATA1PIN_V2;
-			gpads[1].pin_clock = CLOCKPIN_V2;
-			gpads[1].pin_strobe = STROBEPIN_V2;
-			gpads[1].pin_data = DATA2PIN_V2;		
+			gpads[0].pin_clock = clockpin_v2;
+			gpads[0].pin_strobe = strobepin_v2;
+			gpads[0].pin_data = data1pin_v2;
+			gpads[1].pin_clock = clockpin_v2;
+			gpads[1].pin_strobe = strobepin_v2;
+			gpads[1].pin_data = data2pin_v2;		
 		}
 		if (strcmp(confres.gamepad1_type,"nes")==0) {
 			gpads[0].type = GPAD_TYPE_NES;

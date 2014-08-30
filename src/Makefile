@@ -1,10 +1,7 @@
 CC=gcc
 SRCDIR=.
 BUILDDIR=../build
-ifndef ADAPTERVER
-ADAPTERVER = ADAPTERVER2X
-endif
-CFLAGS=-c -Wall -O3 -D$(ADAPTERVER)
+CFLAGS=-c -Wall -O3
 LIBBCM2835_DIR=/usr/local
 LIBBCM2835_INCDIR=$(LIBBCM2835_DIR)/include
 LIBBCM2835_LIBDIR=$(LIBBCM2835_DIR)/lib
@@ -21,7 +18,6 @@ DEPS := $(OBJECTS:.o=.deps)
 
 all $(TARGET): $(LIBBCM2835_LIBDIR)/libbcm2835.a $(LIBCONFUSE_LIBDIR)/libconfuse.a $(OBJECTS)
 	@echo " Linking..."; $(CC) $^ $(LIBS) -o $(TARGET)
-	@echo " Build with $(ADAPTERVER)"
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)

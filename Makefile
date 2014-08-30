@@ -3,10 +3,6 @@ version = 1.0
 tarname = $(package)
 distdir = $(tarname)-$(version)
 
-ifndef ADAPTERVER
-ADAPTERVER = ADAPTERVER1X
-endif
-
 prefix      = /usr/local
 exec_prefix = $(prefix)
 bindir      = $(exec_prefix)/bin
@@ -15,7 +11,6 @@ export prefix
 export exec_prefix
 export bindir
 export sysconfdir
-export ADAPTERVER
 
 all clean check install uninstall SNESDev:
 	cd src && $(MAKE) $@
