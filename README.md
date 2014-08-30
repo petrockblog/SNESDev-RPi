@@ -22,7 +22,8 @@ SNESDev is downloaded and installed with
 cd
 git clone git://github.com/petrockblog/SNESDev-RPi.git
 cd SNESDev-RPi
-sudo ./build.sh
+sudo make
+sudo make install
 ```
 
 The lines above build and install two needed libraries and SNESDev-Rpi. The sudo-command is needed for the installation of the two libraries.
@@ -58,22 +59,18 @@ In order to access the uinput device SNESDev has to be run as root. This is (obv
 Configuring SNESDev-Rpi
 -----------------------
 
-SNESDev-Rpi is configured with the help of the configuration file ```/etc/snesdev.cfg```. It is a lightweighted configuration file and well commented.
+SNESDev-Rpi is configured with the help of the configuration file ```/etc/snesdev.cfg```. It is a lightweighted configuration file and well commented. You can also use the RetroPie Setup Script (https://github.com/petrockblog/RetroPie-Setup) for configuring SNESDev.
+
+__IMPORTANT:__ You might need to configure the correct version of the RetroPie GPIO Adapter. The default version is 2.X. If you find a revision number 1.X on your RetroPie GPIO Adapter you need to set the configiration parameter "adapter_version" to "1x".
 
 
 Running SNESDev as a service
 ----------------------------
 
-Thanks to Ewan Meadows, SNESDev-RPi comes woth a script that allows SNESDev to be run as a service. The installation command for that are
+SNESDev-RPi comes with a script that allows SNESDev to be run as a service. The installation command for that is
 
 ```shell
-chmod +x ./scripts/SNESDev
-sudo cp ./bin/SNESDev /usr/local/bin/
-sudo cp ./scripts/SNESDev /etc/init.d/
-# This command installs the init.d script so it automatically starts on boot
-sudo update-rc.d SNESDev defaults
-# This command starts the daemon now so no need for a reboot
-sudo service SNESDev start
+sudo make installservice
 ```
 
 Button Polling
