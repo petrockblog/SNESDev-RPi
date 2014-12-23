@@ -24,9 +24,9 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@echo " CC $<"; $(CC) $(CFLAGS) -MD -MF $(@:.o=.deps) -c -o $@ $<
 
 $(LIBBCM2835_LIBDIR)/libbcm2835.a:
-	cd ../libs/bcm2835-1.14/ && ./configure
-	cd ../libs/bcm2835-1.14/ && $(MAKE)
-	cd ../libs/bcm2835-1.14/ && $(MAKE) install
+	cd ../libs && tar zxvf bcm2835-1.38.tar.gz
+	cd ../libs/bcm2835-1.38/ && ./configure
+	cd ../libs/bcm2835-1.38/ && $(MAKE)
 
 $(LIBCONFUSE_LIBDIR)/libconfuse.a:
 	cd ../libs/confuse-2.7/ && ./configure
