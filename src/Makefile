@@ -1,7 +1,7 @@
 CC=gcc
 SRCDIR=.
 BUILDDIR=../build
-CFLAGS=-c -Wall -O3
+CFLAGS=-Wall -O3
 LIBBCM2835_DIR=/usr/local
 LIBBCM2835_INCDIR=$(LIBBCM2835_DIR)/include
 LIBBCM2835_LIBDIR=$(LIBBCM2835_DIR)/lib
@@ -21,7 +21,7 @@ all $(TARGET): $(LIBBCM2835_LIBDIR)/libbcm2835.a $(LIBCONFUSE_LIBDIR)/libconfuse
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
-	@echo " CC $<"; $(CC) $(CFLAGS) -MD -MF $(@:.o=.deps) -c -o $@ $<
+	@echo " CC $<"; $(CC) $(CFLAGS) -I$(LIBBCM2835_INCDIR) -I$(LIBCONFUSE_INCDIR) -MD -MF $(@:.o=.deps) -c -o $@ $<
 
 $(LIBBCM2835_LIBDIR)/libbcm2835.a:
 	cd ../libs/bcm2835-1.14/ && ./configure
