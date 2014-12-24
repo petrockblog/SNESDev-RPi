@@ -1,10 +1,17 @@
 CC=gcc
 SRCDIR=.
 BUILDDIR=../build
+<<<<<<< HEAD
 CFLAGS=-Wall -O3
 LIBBCM2835_DIR=/usr/local
 LIBBCM2835_INCDIR=$(LIBBCM2835_DIR)/include
 LIBBCM2835_LIBDIR=$(LIBBCM2835_DIR)/lib
+=======
+CFLAGS=-c -Wall -O3 -I$(LIBBCM2835_INCDIR)
+LIBBCM2835_DIR=../libs/bcm2835-1.38
+LIBBCM2835_INCDIR=$(LIBBCM2835_DIR)/src
+LIBBCM2835_LIBDIR=$(LIBBCM2835_DIR)/src
+>>>>>>> FETCH_HEAD
 LIBCONFUSE_DIR=/usr/local
 LIBCONFUSE_INCDIR=$(LIBCONFUSE_DIR)/include
 LIBCONFUSE_LIBDIR=$(LIBCONFUSE_DIR)/lib
@@ -24,9 +31,9 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@echo " CC $<"; $(CC) $(CFLAGS) -I$(LIBBCM2835_INCDIR) -I$(LIBCONFUSE_INCDIR) -MD -MF $(@:.o=.deps) -c -o $@ $<
 
 $(LIBBCM2835_LIBDIR)/libbcm2835.a:
-	cd ../libs/bcm2835-1.14/ && ./configure
-	cd ../libs/bcm2835-1.14/ && $(MAKE)
-	cd ../libs/bcm2835-1.14/ && $(MAKE) install
+	cd ../libs && tar zxvf bcm2835-1.38.tar.gz
+	cd ../libs/bcm2835-1.38/ && ./configure
+	cd ../libs/bcm2835-1.38/ && $(MAKE)
 
 $(LIBCONFUSE_LIBDIR)/libconfuse.a:
 	cd ../libs/confuse-2.7/ && ./configure
