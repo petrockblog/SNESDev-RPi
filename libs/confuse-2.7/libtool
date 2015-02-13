@@ -56,12 +56,12 @@ fast_install=needless
 
 # The host system.
 host_alias=
-host=armv6l-unknown-linux-gnueabi
+host=armv7l-unknown-linux-gnueabi
 host_os=linux-gnueabi
 
 # The build system.
 build_alias=
-build=armv6l-unknown-linux-gnueabi
+build=armv7l-unknown-linux-gnueabi
 build_os=linux-gnueabi
 
 # A sed program that does not truncate output.
@@ -86,7 +86,7 @@ NM="/usr/bin/nm -B"
 LN_S="ln -s"
 
 # What is the maximum length of a command?
-max_cmd_len=805306365
+max_cmd_len=1572864
 
 # Object file suffix (normally "o").
 objext=o

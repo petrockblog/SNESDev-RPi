@@ -353,9 +353,9 @@ int main(int argc, char *argv[]) {
 
 		/* wait for some time to keep the CPU load low */
 		if (confres.button_enabled && !(confres.gamepad1_enabled || confres.gamepad2_enabled)) {
-			delay(FRAMEWAITLONG);
+			bcm2835_delay(FRAMEWAITLONG);
 		} else {
-			delay(FRAMEWAIT);
+			bcm2835_delay(FRAMEWAIT);
 		}
 	}
 
