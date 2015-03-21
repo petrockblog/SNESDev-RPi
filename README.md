@@ -73,6 +73,16 @@ SNESDev-RPi comes with a script that allows SNESDev to be run as a service. The 
 sudo make installservice
 ```
 
+Uninstalling SNESDev service
+----------------------------
+
+You can uninstall the SNESSDev-Rpi service with the following command:
+
+```shell
+sudo make uninstallservice
+```
+
+
 Button Polling
 --------------
 
