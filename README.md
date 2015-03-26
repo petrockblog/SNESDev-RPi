@@ -26,7 +26,7 @@ sudo make
 sudo make install
 ```
 
-The lines above build and install two needed libraries and SNESDev-Rpi. The sudo-command is needed for the installation of the two libraries.
+The lines above build and install two needed libraries and SNESDev-Rpi. The sudo-command is needed for the installation of the two libraries. It is recommend to run SNESDev as a service, which is described [below](https://github.com/petrockblog/SNESDev-RPi#running-snesdev-as-a-service).
 
 Alternatively, you can use the RetroPie Setup Script (https://github.com/petrockblog/RetroPie-Setup) for installing and configuring SNESDev.
 
