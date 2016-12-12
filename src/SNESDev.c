@@ -329,24 +329,21 @@ int main(int argc, char *argv[]) {
 				break;
 			case BTN_STATE_PRESSED:
 				if (button.pressedCtr == 1 && button.duration >= 1) {
-					uinput_kbd_write(&uinp_kbd, KEY_R, 1, EV_KEY);
+					uinput_kbd_write(&uinp_kbd, KEY_ESC, 1, EV_KEY);
 				}
 				break;
 			case BTN_STATE_RELEASED:
+					
 					if (button.pressedCtr == 1 && button.duration >= 1) {
-						uinput_kbd_write(&uinp_kbd, KEY_R, 0, EV_KEY);
-					} else if (button.pressedCtr == 3 && button.duration >= 1) {
-						// Sending ESC
-						uinput_kbd_write(&uinp_kbd, KEY_ESC, 1, EV_KEY);
-						usleep(50000);
-						uinput_kbd_write(&uinp_kbd, KEY_ESC, 0, EV_KEY);
-					} else if (button.pressedCtr == 5 && button.duration >= 1) {
+					 	uinput_kbd_write(&uinp_kbd, KEY_ESC, 0, EV_KEY);
+					} else if (button.pressedCtr == 2 && button.duration >= 1) {
 						uinput_kbd_write(&uinp_kbd, KEY_F4, 1, EV_KEY);
 						usleep(50000);
 						uinput_kbd_write(&uinp_kbd, KEY_F4, 0, EV_KEY);
 						// shutting down
 						system("shutdown -t 3 -h now");
-					}
+						
+						}
 				break;
 			}
 		}
