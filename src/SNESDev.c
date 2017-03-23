@@ -165,8 +165,8 @@ int main(int argc, char *argv[]) {
 		data2pin = RPI_GPIO_P1_07;
 		clockpin_v2 = RPI_V2_GPIO_P1_19;
 		strobepin_v2 = RPI_V2_GPIO_P1_23;
-		data1pin_v2 = RPI_V2_GPIO_P1_05;
-		data2pin_v2 = RPI_V2_GPIO_P1_07;
+		data1pin_v2 = RPI_V2_GPIO_P1_07;
+		data2pin_v2 = RPI_V2_GPIO_P1_05;
 		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 1.X\n");
 
 	} else if (strcmp(confres.adapter_version,"2x")==0) {
