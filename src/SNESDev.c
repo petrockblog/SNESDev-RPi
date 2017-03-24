@@ -161,8 +161,8 @@ int main(int argc, char *argv[]) {
 	if (strcmp(confres.adapter_version,"1x")==0) {
 		clockpin = RPI_GPIO_P1_19;
 		strobepin = RPI_GPIO_P1_23;
-		data1pin = RPI_GPIO_P1_05;
-		data2pin = RPI_GPIO_P1_07;
+		data1pin = RPI_GPIO_P1_07;
+		data2pin = RPI_GPIO_P1_05;
 		clockpin_v2 = RPI_V2_GPIO_P1_19;
 		strobepin_v2 = RPI_V2_GPIO_P1_23;
 		data1pin_v2 = RPI_V2_GPIO_P1_07;
