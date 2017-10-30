@@ -303,6 +303,8 @@ int main(int argc, char *argv[]) {
 						BTN_SELECT, &uinp_gpads[ctr]);
 				processPadBtn(gpads[ctr].state, EV_KEY, GPAD_SNES_START,
 						BTN_START, &uinp_gpads[ctr]);
+				processPadBtn(gpads[ctr].state, EV_KEY, GPAD_SNES_HOME,
+						BTN_MODE, &uinp_gpads[ctr]);
 
 				if ((gpads[ctr].state & GPAD_SNES_LEFT) == GPAD_SNES_LEFT) {
 					uinput_gpad_write(&uinp_gpads[ctr], ABS_X, 0, EV_ABS);
