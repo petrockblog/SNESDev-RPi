@@ -41,6 +41,8 @@
 #define GPAD_SNES_X       0x200
 #define GPAD_SNES_L       0x400
 #define GPAD_SNES_R       0x800
+#define GPAD_SNES_HOME    0x1000
+
 
 /* bit masks for checking the button states for NES controllers */
 #define GPAD_NES_B       0x01
