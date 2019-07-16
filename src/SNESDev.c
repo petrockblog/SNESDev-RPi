@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <bcm2835.h>
+#include <wiringPi.h>
 #include <signal.h>
 #include <time.h>
 #include <stddef.h>
@@ -47,8 +47,8 @@
 #include "cpuinfo.h"
 
 #define CFGFILENAME "/etc/snesdev.cfg"
-#define BUTTONPIN     RPI_GPIO_P1_11
-#define BUTTONPIN_V2  RPI_V2_GPIO_P1_11
+#define BUTTONPIN     0
+#define BUTTONPIN_V2  0
 
 /* time to wait after each cycle */
 #define GPADSNUM 2 /* number of game pads to poll */
@@ -151,44 +151,43 @@ int main(int argc, char *argv[]) {
 	int16_t data1pin_v2;
 	int16_t data2pin_v2;
 
-	if (!bcm2835_init())
-		return 1;
+	wiringPiSetup();
 	
 	if (readConfigurationfile() != 0 ) {
 		return 1;
 	}
 
 	if (strcmp(confres.adapter_version,"1x")==0) {
-		clockpin = RPI_GPIO_P1_19;
-		strobepin = RPI_GPIO_P1_23;
-		data1pin = RPI_GPIO_P1_07;
-		data2pin = RPI_GPIO_P1_05;
-		clockpin_v2 = RPI_V2_GPIO_P1_19;
-		strobepin_v2 = RPI_V2_GPIO_P1_23;
-		data1pin_v2 = RPI_V2_GPIO_P1_07;
-		data2pin_v2 = RPI_V2_GPIO_P1_05;
+		clockpin = 12;
+		strobepin = 14;
+		data1pin = 7;
+		data2pin = 2;
+		clockpin_v2 = 12;
+		strobepin_v2 = 14;
+		data1pin_v2 = 7;
+		data2pin_v2 = 2;
 		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 1.X\n");
 
 	} else if (strcmp(confres.adapter_version,"2x")==0) {
-		clockpin = RPI_GPIO_P1_16;
-		strobepin = RPI_GPIO_P1_18;
-		data1pin = RPI_GPIO_P1_15;
-		data2pin = RPI_GPIO_P1_13;
-		clockpin_v2 = RPI_V2_GPIO_P1_16;
-		strobepin_v2 = RPI_V2_GPIO_P1_18;
-		data1pin_v2 = RPI_V2_GPIO_P1_15;
-		data2pin_v2 = RPI_V2_GPIO_P1_13;
+		clockpin = 4;
+		strobepin = 5;
+		data1pin = 3;
+		data2pin = 2;
+		clockpin_v2 = 4;
+		strobepin_v2 = 5;
+		data1pin_v2 = 3;
+		data2pin_v2 = 2;
 		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 2.X\n");
 
 	} else {
-		clockpin = RPI_GPIO_P1_16;
-		strobepin = RPI_GPIO_P1_18;
-		data1pin = RPI_GPIO_P1_15;
-		data2pin = RPI_GPIO_P1_13;
-		clockpin_v2 = RPI_V2_GPIO_P1_16;
-		strobepin_v2 = RPI_V2_GPIO_P1_18;
-		data1pin_v2 = RPI_V2_GPIO_P1_15;
-		data2pin_v2 = RPI_V2_GPIO_P1_13;
+		clockpin = 4;
+		strobepin = 5;
+		data1pin = 3;
+		data2pin = 2;
+		clockpin_v2 = 4;
+		strobepin_v2 = 5;
+		data1pin_v2 = 3;
+		data2pin_v2 = 3;
 		printf("[SNESDev-Rpi] Using pin setup for RetroPie GPIO-Adapter Version 2.X\n");
 	}
 
@@ -355,9 +354,9 @@ int main(int argc, char *argv[]) {
 
 		/* wait for some time to keep the CPU load low */
 		if (confres.button_enabled && !(confres.gamepad1_enabled || confres.gamepad2_enabled)) {
-			bcm2835_delay(FRAMEWAITLONG);
+			delay(FRAMEWAITLONG);
 		} else {
-			bcm2835_delay(FRAMEWAIT);
+			delay(FRAMEWAIT);
 		}
 	}
 

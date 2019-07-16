@@ -25,7 +25,8 @@
  * Raspberry Pi is a trademark of the Raspberry Pi Foundation.
  */
  
-#include <bcm2835.h> 
+#include <wiringPi.h> 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -34,9 +35,9 @@
 int16_t gpio_open(int16_t port, int16_t pin, GPIO_DIR direction)
 {
 	if (direction==GPIO_OUTPUT) {
-		bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+		pinMode(pin, OUTPUT);
 	} else if (direction==GPIO_INPUT) {		
-		bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+		pinMode(pin, INPUT);
 	} else {
 		return -1;
 	}	
@@ -45,7 +46,7 @@ int16_t gpio_open(int16_t port, int16_t pin, GPIO_DIR direction)
 
 uint8_t gpio_read_pin (int16_t port, int16_t pin)
 {
-	uint8_t val = bcm2835_gpio_lev(pin);
+	uint8_t val = digitalRead(pin);
 	if (val==HIGH) {
 		return GPIO_HIGH;
 	} else if (val==LOW) {
@@ -58,9 +59,9 @@ uint8_t gpio_read_pin (int16_t port, int16_t pin)
 int16_t gpio_write_pin  (int16_t port, int16_t pin, GPIO_VALUE val)
 {
 	if (val==GPIO_HIGH) {
-		bcm2835_gpio_write( pin, HIGH );
+		digitalWrite( pin, HIGH );
 	} else if (val==GPIO_LOW) {
-		bcm2835_gpio_write( pin, LOW );
+		digitalWrite( pin, LOW );
 	} else {
 		return -1;
 	}

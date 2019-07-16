@@ -25,10 +25,10 @@
  * Raspberry Pi is a trademark of the Raspberry Pi Foundation.
  */
  
-#include <bcm2835.h>
+#include <wiringPi.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdint.h>
 #include "gamepad.h"
 #include "GPIO.h"
 
